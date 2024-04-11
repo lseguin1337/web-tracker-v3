@@ -7,16 +7,20 @@ type UnsubscribeHook = () => void;
 export interface PipelineContext<T> {
   push: EventHook<T>;
   document: Document;
+  [key: symbol]: unknown;
 }
+
+export type PipelineOptions = Omit<PipelineContext<never>, 'push'>;
 
 // TODO: typings
 export type Producer<T = unknown> = (ctx: PipelineContext<T>) => UnsubscribeHook;
 
-export type Transformer<T = unknown, U = unknown> = (ctx: PipelineContext<T>) => EventHook<U>;
+export type Transformer<T = unknown> = (ctx: PipelineContext<T>) => EventHook<T>;
 
 export type Composer<T = unknown, U = unknown> = (ctx: PipelineContext<T>) => EventHook<U>;
 
 interface TrackingPipeline {
+  define: (key: Symbol, value: unknown) => void;
   register: (producers: Producer[]) => void;
   transform: (producer: Producer, transform: Transformer) => void;
   compose: (sources: Producer[], composer: Composer) => void;
@@ -24,11 +28,19 @@ interface TrackingPipeline {
 
 const TrackingPipelineContext = createContext<TrackingPipeline>();
 
-export function createTrackingPipeline() {
-  const producers = new Set();
+export function createTrackingPipeline(options: PipelineOptions = { document }) {
+  const producers = new Set<Producer>();
   const transformers = new Map();
+  let onStop = () => {};
+
+  const ctx: any = {
+    ...options,
+  };
 
   provide(TrackingPipelineContext, {
+    define(key: symbol, value: any) {
+      ctx[key] = value;
+    },
     register(newProducers: Producer[]) {
       for (const producer of newProducers)
         producers.add(producer);
@@ -43,13 +55,14 @@ export function createTrackingPipeline() {
       // TODO: forward all events from the sources to the composer
     }
   });
+
   return {
-    start: () => {
-      // TODO: should be implemented
+    start: (push: EventHook) => {
+      const destroys = Array.from(producers).map(producer => producer({ ...ctx, push }));
+      // TODO: we should implement the transformation layer + the composition layer
+      onStop = () => destroys.map((kill) => kill());
     },
-    stop: () => {
-      // TODO: should be implemented
-    },
+    stop: () => onStop(),
   };
 }
 

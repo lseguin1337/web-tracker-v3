@@ -1,15 +1,18 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { ClickProducer, DOMProducer, InputProducer } from "../producers";
+import { ClickProducer, DOMProducer, InputProducer, MouseMoveProducer } from "../producers";
 import { AnonymizerTransformer } from "../transformers";
 
 export function RecordingModule() {
+  console.log('RecordingModule used');
+  
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
   pipeline.register([
     ClickProducer,
     InputProducer,
+    MouseMoveProducer,
     DOMProducer,
   ]);
 

@@ -12,7 +12,7 @@ function WebTracker(config: TagConfig) {
 
   onMounted(() => {
     // call when all sub module are mounted...
-    pipeline.start();
+    pipeline.start(console.log);
   });
 
   onDestroy(() => {
@@ -28,12 +28,11 @@ function WebTracker(config: TagConfig) {
 }
 
 async function bootstrap() {
-  const tracker = await mount(() => WebTracker({
+  await mount(() => WebTracker({
     sessionRecordingEnabled: true,
     anonymization: true,
     tagVersion: 'demo'
   }));
-  setTimeout(() => tracker.destroy(), 5000);
 }
 
 bootstrap();

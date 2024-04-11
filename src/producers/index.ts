@@ -12,7 +12,7 @@ export const ClickProducer: Producer = ({ document, push }) => {
 };
 
 export const MouseMoveProducer: Producer = ({ document, push }) => {
-  return listen(document, 'mousemove', push);
+  return listen(document.defaultView as Window, 'mousemove', push);
 };
 
 export const DOMProducer: Producer = ({ document, push }) => {
