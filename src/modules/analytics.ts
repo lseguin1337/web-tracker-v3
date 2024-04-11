@@ -11,7 +11,7 @@ const TextVisibilityComposer: Composer = (ctx) => {
 }
 
 function TextVisibilityModule() {
-  console.log('TextVisibilityModule used');
+  console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
   pipeline.register([
     DOMProducer,
@@ -20,7 +20,7 @@ function TextVisibilityModule() {
 }
 
 export function AnalyticsModule() {
-  console.log('AnalyticsModule used');
+  console.log('AnalyticsModule init');
   const { textVisibility } = useTrackerConfig();
 
   return [

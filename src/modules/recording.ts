@@ -4,8 +4,8 @@ import { ClickProducer, DOMProducer, InputProducer, MouseMoveProducer } from "..
 import { AnonymizerTransformer } from "../transformers";
 
 export function RecordingModule() {
-  console.log('RecordingModule used');
-  
+  console.log('RecordingModule init');
+
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
