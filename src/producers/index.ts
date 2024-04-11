@@ -11,9 +11,9 @@ export const ClickProducer: Producer = ({ document }, push) => {
   return listen(document, 'click', push);
 };
 
-export const MouseMoveProducer: Producer = ({ document }, push) => {
+export const MouseMoveProducer: Producer = ({ window }, push) => {
   console.log('MouseMoveProducer init');
-  return listen(document.defaultView as Window, 'mousemove', push);
+  return listen(window, 'mousemove', push);
 };
 
 export const InputProducer: Producer = ({ document }, push) => {
@@ -21,12 +21,13 @@ export const InputProducer: Producer = ({ document }, push) => {
   return listen(document, 'change', push);
 };
 
-export const DOMProducer: Producer = ({ document }, push) => {
+export const DOMProducer: Producer = ({ document, window }, push) => {
   console.log('DOMProducer init');
   // todo serialze document
   push({ type: 'initialDom', args: [document] });
 
-  const mutationObserver = new MutationObserver((mutations) => {
+  // TODO: handle shadow root, adoptedStylesheets
+  const mutationObserver = new window.MutationObserver((mutations) => {
     // TODO: of course we will have to serialize this shit
     push({ type: 'mutations', args: [mutations] });
   });
