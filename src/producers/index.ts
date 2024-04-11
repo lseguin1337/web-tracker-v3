@@ -6,22 +6,22 @@ function listen(target: EventTarget, eventName: string, push: (event: { type: st
   return () => target.removeEventListener(eventName, handler);
 }
 
-export const ClickProducer: Producer = ({ document, push }) => {
+export const ClickProducer: Producer = ({ document }, push) => {
   console.log('ClickProducer init');
   return listen(document, 'click', push);
 };
 
-export const MouseMoveProducer: Producer = ({ document, push }) => {
+export const MouseMoveProducer: Producer = ({ document }, push) => {
   console.log('MouseMoveProducer init');
   return listen(document.defaultView as Window, 'mousemove', push);
 };
 
-export const InputProducer: Producer = ({ document, push }) => {
+export const InputProducer: Producer = ({ document }, push) => {
   console.log('InputProducer init');
   return listen(document, 'change', push);
 };
 
-export const DOMProducer: Producer = ({ document, push }) => {
+export const DOMProducer: Producer = ({ document }, push) => {
   console.log('DOMProducer init');
   // todo serialze document
   push({ type: 'initialDom', args: [document] });

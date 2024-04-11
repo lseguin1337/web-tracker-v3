@@ -4,20 +4,17 @@ export type EventHook<T = unknown> = (event: T) => void
 
 type UnsubscribeHook = () => void;
 
-export interface PipelineContext<T> {
-  push: EventHook<T>;
+export interface PipelineContext {
   document: Document;
   [key: symbol]: unknown;
 }
 
-export type PipelineOptions = Omit<PipelineContext<never>, 'push'>;
-
 // TODO: typings
-export type Producer<T = unknown> = (ctx: PipelineContext<T>) => UnsubscribeHook;
+export type Producer<T = unknown> = (ctx: PipelineContext, push: EventHook<T>) => UnsubscribeHook;
 
-export type Transformer<T = unknown> = (ctx: PipelineContext<T>) => EventHook<T>;
+export type Transformer<T = unknown> = (ctx: PipelineContext, push: EventHook<T>) => EventHook<T>;
 
-export type Composer<T = unknown, U = unknown> = (ctx: PipelineContext<T>) => EventHook<U>;
+export type Composer<T = unknown, U = unknown> = (ctx: PipelineContext, push: EventHook<T>) => EventHook<U>;
 
 interface TrackingPipeline {
   define: (key: Symbol, value: unknown) => void;
@@ -28,12 +25,13 @@ interface TrackingPipeline {
 
 const TrackingPipelineContext = createContext<TrackingPipeline>();
 
-export function createTrackingPipeline(options: PipelineOptions = { document }) {
+export function createTrackingPipeline({ document = window.document, ...options }: Partial<PipelineContext> = {}) {
   const producers = new Set<Producer>();
   const transformers = new Map<Producer, Set<Transformer>>();
   let onStop = () => {};
 
   const ctx: any = {
+    document,
     ...options,
   };
 
@@ -60,8 +58,8 @@ export function createTrackingPipeline(options: PipelineOptions = { document }) 
     start: (push: EventHook) => {
       const destroys = Array.from(producers).map((producer) => {
         const trans = Array.from(transformers.get(producer) || []);
-        const next = trans.reduceRight((nextPush, transfomer) => transfomer({ ...ctx, push: nextPush }), push);
-        return producer({ ...ctx, push: next });
+        const next = trans.reduceRight((nextPush, transfomer) => transfomer(ctx, nextPush), push);
+        return producer(ctx, next);
       });
       // TODO: we should implement the transformation layer + the composition layer
       onStop = () => destroys.map((kill) => kill());
