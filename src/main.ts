@@ -1,44 +1,38 @@
 import { mount, onDestroy, onMounted } from './lib';
 
-import { setupTrackingLifeCycle } from './composables/use-tracking-life-cycle';
-import { setupEventIdentifier, provideEventEmitter, TrackingEvent } from './composables/use-event';
-import { provideDocument, provideTrackerConfig, TagConfig } from './composables/use-tracker-config';
-import { SessionReplayModule } from './recordings/session-replay';
+import { provideTrackerConfig, TagConfig } from './composables/use-tracker-config';
+import { RecordingModule } from './modules/recording';
+import { createTrackingPipeline } from './composables/use-tracking-pipeline';
+import { AnalyticsModule } from './modules/analytics';
 
-function setupTrackingContext(options: { document: Document, config: TagConfig, emit: (event: TrackingEvent) => void }) {
-  setupEventIdentifier();
-  provideTrackerConfig(options.config);
-  provideEventEmitter(options.emit);
-  provideDocument(options.document);
-  return setupTrackingLifeCycle();
-}
-
-function WebTracker(document: Document) {
+function WebTracker(config: TagConfig) {
   // expose context to sub modules
-  const lifeCycle = setupTrackingContext({
-    document,
-    config: { anonymization: false, tagVersion: 'demo' },
-    emit: (event) => console.log('event:', event),
-  });
+  const pipeline = createTrackingPipeline();
+  provideTrackerConfig(config);
 
   onMounted(() => {
     // call when all sub module are mounted...
-    lifeCycle.start();
+    pipeline.start();
   });
 
   onDestroy(() => {
     // call when ModuleInstance is destroyed
-    lifeCycle.stop();
+    pipeline.stop();
   });
 
   return [
-    SessionReplayModule,
+    AnalyticsModule,
+    ...(config.sessionRecordingEnabled ? [RecordingModule] : []),
     // ... we can use any other sub module
   ];
 }
 
 async function bootstrap() {
-  const tracker = await mount(() => WebTracker(document));
+  const tracker = await mount(() => WebTracker({
+    sessionRecordingEnabled: true,
+    anonymization: true,
+    tagVersion: 'demo'
+  }));
   setTimeout(() => tracker.destroy(), 5000);
 }
 
