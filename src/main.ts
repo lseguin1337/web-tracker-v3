@@ -12,6 +12,7 @@ function WebTracker(config: TagConfig) {
 
   onMounted(() => {
     // call when all sub module are mounted...
+    console.log('Pipeline starting...');
     pipeline.start(console.log);
   });
 
@@ -28,11 +29,12 @@ function WebTracker(config: TagConfig) {
 }
 
 async function bootstrap() {
-  await mount(() => WebTracker({
+  const tracker = await mount(() => WebTracker({
     sessionRecordingEnabled: true,
     anonymization: true,
     tagVersion: 'demo'
   }));
+  console.log(tracker);
 }
 
 bootstrap();

@@ -9,7 +9,6 @@ export interface TagConfig {
 }
 
 const ConfigContext = createContext<TagConfig>();
-const DocumentContext = createContext<Document>();
 
 export function useTrackerConfig() {
   return inject(ConfigContext);
@@ -17,12 +16,4 @@ export function useTrackerConfig() {
 
 export function provideTrackerConfig(config: TagConfig) {
   provide(ConfigContext, config);
-}
-
-export function useDocument() {
-  return inject(DocumentContext);
-}
-
-export function provideDocument(document: Document) {
-  return provide(DocumentContext, document);
 }

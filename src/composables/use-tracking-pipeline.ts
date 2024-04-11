@@ -30,7 +30,7 @@ const TrackingPipelineContext = createContext<TrackingPipeline>();
 
 export function createTrackingPipeline(options: PipelineOptions = { document }) {
   const producers = new Set<Producer>();
-  const transformers = new Map();
+  const transformers = new Map<Producer, Set<Transformer>>();
   let onStop = () => {};
 
   const ctx: any = {
@@ -58,7 +58,11 @@ export function createTrackingPipeline(options: PipelineOptions = { document }) 
 
   return {
     start: (push: EventHook) => {
-      const destroys = Array.from(producers).map(producer => producer({ ...ctx, push }));
+      const destroys = Array.from(producers).map((producer) => {
+        const trans = Array.from(transformers.get(producer) || []);
+        const next = trans.reduceRight((nextPush, transfomer) => transfomer({ ...ctx, push: nextPush }), push);
+        return producer({ ...ctx, push: next });
+      });
       // TODO: we should implement the transformation layer + the composition layer
       onStop = () => destroys.map((kill) => kill());
     },

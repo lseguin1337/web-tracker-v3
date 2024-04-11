@@ -1,6 +1,6 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { Composer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { DOMProducer } from "../producers";
+import { ClickProducer, DOMProducer } from "../producers";
 
 const TextVisibilityComposer: Composer = (ctx) => {
   // local state
@@ -13,15 +13,15 @@ const TextVisibilityComposer: Composer = (ctx) => {
 function TextVisibilityModule() {
   console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
-  pipeline.register([
-    DOMProducer,
-  ]);
+  pipeline.register([DOMProducer]);
   pipeline.compose([DOMProducer], TextVisibilityComposer);
 }
 
 export function AnalyticsModule() {
   console.log('AnalyticsModule init');
   const { textVisibility } = useTrackerConfig();
+  const pipeline = useTrackingPipeline();
+  pipeline.register([ClickProducer]);
 
   return [
     ...(textVisibility ? [TextVisibilityModule] : []),

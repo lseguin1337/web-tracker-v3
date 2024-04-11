@@ -66,6 +66,18 @@ function callEvery(hooks: FnHook[]) {
     hook();
 }
 
+export async function useAsyncChildren() {
+  return restoreCtx((modules: ModuleFn[]) => {
+    const ctrl = new AbortController();
+    const signal = ctrl.signal;
+    mount(() => modules).then(({ destroy }) => {
+      if (signal.aborted) return destroy();
+      signal.onabort = destroy;
+    });
+    onDestroy(() => ctrl.abort());
+  });
+}
+
 async function mountChildren(children: ModuleFnOutput): Promise<ModuleInstance[]> {
   if (!children) return Promise.resolve([]);
   if (isPromise(children)) return children.then(restoreCtx(mountChildren));
