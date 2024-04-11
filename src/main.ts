@@ -24,6 +24,7 @@ function WebTracker(document: Document) {
   onMounted(() => {
     // call when all sub module are mounted...
     lifeCycle.start();
+    lifeCycle.sendCommand('hello-world', { data: 1 });
   });
 
   onDestroy(() => {

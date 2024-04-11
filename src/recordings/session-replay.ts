@@ -3,8 +3,12 @@ import { useTrackingLifeCycle } from "../composables/use-tracking-life-cycle";
 
 function MutationObserverModule() {
   const emit = useEventEmitter();
-  const { onStart, onStop } = useTrackingLifeCycle();
+  const { onStart, onStop, onCommand } = useTrackingLifeCycle();
   let timer: any;
+
+  onCommand('hello-world', () => {
+    console.log('coucou')
+  });
 
   onStart(() => {
     console.log('TRACKING STARTED');
