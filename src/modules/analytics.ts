@@ -1,29 +1,31 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
-import { Composer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
+import { useTrackingPipeline } from "../composables/use-tracking-pipeline";
+import { RageClickProducer, TextVisibilityProducer } from "../composers";
 import { ClickProducer, DOMProducer } from "../producers";
-
-const TextVisibilityComposer: Composer = (_ctx, push) => {
-  // local state
-  return (event: any) => {
-    // simple pass through
-    push(event);
-  };
-}
 
 function TextVisibilityModule() {
   console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
-  pipeline.register([DOMProducer]);
-  pipeline.compose([DOMProducer], TextVisibilityComposer);
+
+  pipeline.register([
+    DOMProducer,
+    TextVisibilityProducer,
+  ]);
 }
+
+function NoopModule() {}
 
 export function AnalyticsModule() {
   console.log('AnalyticsModule init');
   const { textVisibility } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
-  pipeline.register([ClickProducer]);
+
+  pipeline.register([
+    ClickProducer,
+    RageClickProducer,
+  ]);
 
   return [
-    ...(textVisibility ? [TextVisibilityModule] : []),
+    textVisibility ? TextVisibilityModule : NoopModule,
   ];
 }

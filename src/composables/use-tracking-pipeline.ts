@@ -7,19 +7,57 @@ type UnsubscribeHook = () => void;
 export interface PipelineContext {
   document: Document;
   window: Window & typeof globalThis;
-  signal: AbortSignal;
   onStop: (handler: () => void) => void;
   [key: symbol]: unknown;
 }
 
 type PipelineOptions = Partial<Omit<PipelineContext, 'signal' | 'onStop'>>;
 
-// TODO: typings
-export type Producer<T = unknown> = (ctx: PipelineContext, push: EventHook<T>) => UnsubscribeHook;
+interface Producer<T> {
+  type: 'producer';
+  setup: ProducerFn<T>;
+}
 
-export type Transformer<T = unknown> = (ctx: PipelineContext, push: EventHook<T>) => EventHook<T>;
+interface Transformer<T, U> {
+  type: 'transformer';
+  deps: Source<T>[];
+  setup: TransformerFn<T, U>
+}
 
-export type Composer<T = unknown, U = unknown> = (ctx: PipelineContext, push: EventHook<T>) => EventHook<U>;
+interface Composer<T, U> {
+  type: 'composer';
+  deps: Source<T>[];
+  setup: ComposerFn<T, U>;
+}
+
+type Source<T = unknown> = Producer<T> | Composer<any, T>;
+
+type ProducerFn<T> = (ctx: PipelineContext, push: EventHook<T>) => UnsubscribeHook;
+type TransformerFn<T, U> = (ctx: PipelineContext, push: EventHook<U>) => ((event: T) => void);
+type ComposerFn<T, U> = (ctx: PipelineContext, push: EventHook<U>) => ((event: T) => void);
+
+export function producer<T>(setup: ProducerFn<T>): Producer<T> {
+  return {
+    type: 'producer',
+    setup,
+  };
+}
+
+export function transformer<T, U>(source: Source<T>, setup: TransformerFn<T, U>): Transformer<T, U> {
+  return {
+    type: 'transformer',
+    deps: [source],
+    setup,
+  };
+}
+
+export function composer<T, U>(sources: Source<T>[], setup: ComposerFn<T, U>): Composer<T, U> {
+  return {
+    type: 'composer',
+    deps: sources,
+    setup,
+  };
+}
 
 interface TrackingPipeline {
   /**
@@ -30,66 +68,98 @@ interface TrackingPipeline {
   /**
    * @description Register producers into the tracking pipeline
    */
-  register: (producers: Producer[]) => void;
-
-  /**
-   * @description Register a transformer for a producer
-   */
-  transform: (producer: Producer, transform: Transformer) => void;
-
-  /**
-   * @description Register a composer that will combine other producer to generate new event (RageClick, TextVisibility)
-   */
-  compose: (sources: Producer[], composer: Composer) => void;
+  register: (producers: (Source<any> | Transformer<any, any>)[]) => void;
 }
 
 const TrackingPipelineContext = createContext<TrackingPipeline>();
 
-export function createTrackingPipeline({ window: windowContext = window, ...options }: PipelineOptions = {}) {
-  const producers = new Set<Producer>();
-  const transformers = new Map<Producer, Set<Transformer>>();
-  const abortCtrl = new AbortController();
-  const signal = abortCtrl.signal;
+function createOutputsHandler() {
+  let refDate: number | null = null;
+  let rescheduledTasks: (() => void)[] = [];
+  let countSyncHook = 0;
 
-  const ctx: PipelineContext = {
+  const reschedule = () => {
+    refDate = null;
+    const tasks = rescheduledTasks;
+    rescheduledTasks = [];
+    for (const task of tasks) task();
+  };
+
+  return function outputHandler(...hooks: EventHook<unknown>[]) {
+    return function push(event: unknown) {  
+      // handle non blocking thread
+      if (refDate === null) {
+        refDate = Date.now();
+        setTimeout(reschedule, 0);
+      }
+
+      if (rescheduledTasks.length > 0 || (countSyncHook % 5 === 0 && Date.now() - refDate > 30)) {
+        console.log('Pipeline re-scheduled');
+        // reschedule forwarding
+        rescheduledTasks.push(() => push(event));
+        return;
+      }
+
+      countSyncHook++;
+
+      // forward events
+      for (const hook of hooks)
+        hook(event);
+    };
+  }
+}
+
+export function createTrackingPipeline({ window: windowContext = window, ...options }: PipelineOptions = {}) {
+  const registry = new Set<Source<any> | Transformer<any, any>>();
+  const stopListeners: (() => void)[] = [];
+  const instances = new Map<Source<any>, EventHook<any> | UnsubscribeHook>();
+
+  const context: PipelineContext = {
     window: windowContext,
     document: options.document || windowContext.document,
     ...options,
-    signal,
-    onStop: (handler) => signal.addEventListener('abort', handler, { once: true }),
+    onStop: (handler) => stopListeners.push(handler),
   };
 
   provide(TrackingPipelineContext, {
     define(key: symbol, value: any) {
-      ctx[key] = value;
+      context[key] = value;
     },
-    register(newProducers: Producer[]) {
-      for (const producer of newProducers)
-        producers.add(producer);
+    register(items: (Source<any> | Transformer<any, any>)[]) {
+      for (const item of items)
+        registry.add(item);
     },
-    transform(producer: Producer, transformer: Transformer) {
-      // transform an event
-      const list = transformers.get(producer) || new Set();
-      list.add(transformer);
-      transformers.set(producer, list);
-    },
-    compose(sources: Producer[], composer: Composer) {
-      // TODO: forward all events from the sources to the composer
-    }
   });
 
   return {
-    start: (push: EventHook) => {
-      // TODO: we should implement the transformation layer + the composition layer
-      const destroys = Array.from(producers).map((producer) => {
-        const trans = Array.from(transformers.get(producer) || []);
-        const next = trans.reduceRight((nextPush, transfomer) => transfomer(ctx, nextPush), push);
-        return producer(ctx, next);
-      });
-      signal.addEventListener('abort', () => destroys.forEach(kill => kill()), { once: true });
+    start(push: (event: any) => void) {
+      const entries = Array.from(registry);
+      const sources = entries.filter(s => s.type !== 'transformer');
+      const transformers = entries.filter(s => s.type === 'transformer');
+
+      const dedup = createOutputsHandler();
+
+      function resolve(source: Source<any>): EventHook<any> | (() => void) {
+        if (instances.has(source))
+          return instances.get(source)!;
+        const composers = sources.filter(child => child.type === 'composer' && child.deps.includes(source)).map(resolve);
+        const output = transformers
+          .filter(transformer => transformer.deps.includes(source))
+          .reduceRight((push, { setup }) => setup(context, dedup(push)), dedup(...composers, push));
+        const instance = source.setup(context, output);
+        instances.set(source, instance);
+        return instance;
+      }
+
+      sources.map(resolve);
     },
     stop: () => {
-      abortCtrl.abort();
+      for (const [item, stop] of instances) {
+        if (item.type === 'producer') (stop as UnsubscribeHook)();
+        instances.delete(item);
+      }
+      while (stopListeners.length)
+        stopListeners.pop()!();
     }
   };
 }

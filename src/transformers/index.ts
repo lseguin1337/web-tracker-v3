@@ -1,9 +1,10 @@
-import { Transformer } from "../composables/use-tracking-pipeline";
+import { transformer } from "../composables/use-tracking-pipeline";
+import { DOMProducer } from "../producers";
 
-export const AnonymizerTransformer: Transformer = (_, push) => {
-  console.log('AnonymizerTransformer init');
+export const DOMAnonymizer = transformer(DOMProducer, (_, push) => {
+  console.log('DOMAnonymizer init');
   return (event) => {
     // simple pass through
     push(event);
   };
-}
+});
