@@ -1,14 +1,13 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { useTrackingPipeline } from "../composables/use-tracking-pipeline";
 import { RageClickProducer, TextVisibilityProducer } from "../composers";
-import { ClickProducer, DOMProducer } from "../producers";
+import { ClickProducer } from "../producers";
 
 function TextVisibilityModule() {
   console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
 
-  pipeline.register([
-    DOMProducer,
+  pipeline.use([
     TextVisibilityProducer,
   ]);
 }
@@ -20,7 +19,7 @@ export function AnalyticsModule() {
   const { textVisibility } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
-  pipeline.register([
+  pipeline.use([
     ClickProducer,
     RageClickProducer,
   ]);

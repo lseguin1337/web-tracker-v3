@@ -17,7 +17,8 @@ export const RageClickProducer = composer([ClickProducer], (_, push: EventHook<{
 
 export const TextVisibilityProducer = composer([DOMProducer], (_, push: (event: { type: string, args: any[] }) => void) => {
   console.log('TextVisibilityProducer init');
-  return (event) => {
-    push({ type: 'textVisibility', args: [] });
+  let i = 0;
+  return (_) => {
+    if (i++ % 2) push({ type: 'textVisibility', args: [] });
   };
 });

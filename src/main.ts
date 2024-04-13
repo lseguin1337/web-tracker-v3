@@ -15,7 +15,7 @@ function WebTracker(config: TagConfig) {
   onMounted(() => {
     // call when all sub module are mounted...
     console.log('Pipeline starting...');
-    pipeline.start(console.log);
+    pipeline.start((event) => console.log('emit:', event));
   });
 
   onDestroy(() => {

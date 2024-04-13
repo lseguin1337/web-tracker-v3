@@ -44,6 +44,7 @@ export const DOMProducer = producer<SerializedEvent>(({ document, window }, push
   });
 
   return () => {
+    console.log('DOMProducer destroyed');
     mutationObserver.disconnect();
   };
 });
