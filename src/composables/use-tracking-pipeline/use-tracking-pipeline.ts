@@ -1,45 +1,11 @@
-import { createContext, inject, provide } from "../lib";
-
-export type EventHook<T = unknown> = (event: T) => void
-
-type UnsubscribeHook = () => void;
-
-export interface PipelineContext {
-  document: Document;
-  window: Window & typeof globalThis;
-  onStop: (handler: () => void) => void;
-  [key: symbol]: unknown;
-}
-
-type PipelineOptions = Partial<Omit<PipelineContext, 'signal' | 'onStop'>>;
-
-interface Producer<T> {
-  type: 'producer';
-  setup: ProducerFn<T>;
-}
-
-interface Transformer<T, U> {
-  type: 'transformer';
-  deps: Source<T>[];
-  setup: TransformerFn<T, U>
-}
-
-interface Composer<T, U> {
-  type: 'composer';
-  deps: Source<T>[];
-  setup: ComposerFn<T, U>;
-}
-
-type Source<T = unknown> = Producer<T> | Composer<any, T>;
-
-type ProducerFn<T> = (ctx: PipelineContext, push: EventHook<T>) => UnsubscribeHook;
-type TransformerFn<T, U> = (ctx: PipelineContext, push: EventHook<U>) => ((event: T) => void);
-type ComposerFn<T, U> = (ctx: PipelineContext, push: EventHook<U>) => ((event: T) => void);
+import { createContext, inject, provide } from "../../lib";
+import { EventHook, PipelineContext } from "../use-tracking-pipeline";
+import { Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, TrackingPipeline, Transformer, TransformerSetup, UnsubscribeHook } from "./types";
 
 /**
  * @description Events Producer
  */
-export function producer<T>(setup: ProducerFn<T>): Producer<T> {
+export function producer<T>(setup: ProducerSetup<T>): Producer<T> {
   return {
     type: 'producer',
     setup,
@@ -49,7 +15,7 @@ export function producer<T>(setup: ProducerFn<T>): Producer<T> {
 /**
  * @description Transform a Producer/Composer behavior
  */
-export function transformer<T, U>(source: Source<T>, setup: TransformerFn<T, U>): Transformer<T, U> {
+export function transformer<T, U>(source: Source<T>, setup: TransformerSetup<T, U>): Transformer<T, U> {
   return {
     type: 'transformer',
     deps: [source],
@@ -60,7 +26,7 @@ export function transformer<T, U>(source: Source<T>, setup: TransformerFn<T, U>)
 /**
  * @description Generate new Event From other 
  */
-export function composer<T, U>(sources: Source<T>[], setup: ComposerFn<T, U>): Composer<T, U> {
+export function composer<T, U>(sources: Source<T>[], setup: ComposerSetup<T, U>): Composer<T, U> {
   return {
     type: 'composer',
     deps: sources,
@@ -68,22 +34,15 @@ export function composer<T, U>(sources: Source<T>[], setup: ComposerFn<T, U>): C
   };
 }
 
-interface TrackingPipeline {
-  /**
-   * @description Define value into the pipeline context
-   */
-  define: (key: Symbol, value: unknown) => void;
-
-  /**
-   * @description Register producers into the tracking pipeline
-   */
-  use: (producers: (Source<any> | Transformer<any, any>)[]) => void;
-
-  /**
-   * @description Supsend producer activity
-   * @returns Restore producer activity
-   */
-  suspend: (producers: Producer<any>[]) => (() => {});
+/**
+ * @description Consume events
+ */
+export function consumer<T>(sources: Source<T>[], setup: ConsumerSetup<T>): Consumer<T> {
+  return {
+    type: 'consumer',
+    deps: sources,
+    setup,
+  };
 }
 
 const TrackingPipelineContext = createContext<TrackingPipeline>();
@@ -125,9 +84,9 @@ function createOutputsHandler() {
 }
 
 export function createTrackingPipeline({ window: windowContext = window, ...options }: PipelineOptions = {}) {
-  const registry = new Set<Source<any> | Transformer<any, any>>();
+  const registry = new Set<PipelineInjectable>();
   const stopListeners: (() => void)[] = [];
-  const inputs = new Map<Source<any>, EventHook<any> | UnsubscribeHook>();
+  const inputs = new Map<Source<any> | Consumer<any>, EventHook<any> | UnsubscribeHook>();
   const outputs = new Map<Source<any>, EventHook<any>>();
 
   let started = false;
@@ -155,7 +114,7 @@ export function createTrackingPipeline({ window: windowContext = window, ...opti
     };
   }
 
-  function use(items: (Source<any> | Transformer<any, any>)[]) {
+  function use(items: (Source<any> | Transformer<any, any> | Consumer<T>)[]) {
     for (const item of items) {
       registry.add(item);
       // auto inject dependencies
@@ -170,7 +129,7 @@ export function createTrackingPipeline({ window: windowContext = window, ...opti
     suspend,
   } as TrackingPipeline);
 
-  function start(push: (event: any) => void) {
+  function start() {
     if (started) throw new Error('Pieline already started');
     const entries = Array.from(registry);
     const sources = entries.filter(s => s.type !== 'transformer');
@@ -178,13 +137,29 @@ export function createTrackingPipeline({ window: windowContext = window, ...opti
 
     const dedup = createOutputsHandler();
 
-    function resolve(source: Source<any>): EventHook<any> | (() => void) {
+    function resolve(source: Source<any> | Consumer<any>): EventHook<any> | (() => void) {
       if (inputs.has(source))
         return inputs.get(source)!;
-      const composers = sources.filter(child => child.type === 'composer' && child.deps.includes(source)).map(resolve);
+
+      if (source.type === 'consumer') {
+        const input = source.setup(context);
+        inputs.set(source, input);
+        return input;
+      }
+
+      const next = sources.filter(child => (child.type === 'composer' || child.type === 'consumer') && child.deps.includes(source)).map(resolve);
+      if (next.length === 0) {
+        console.warn('No consumer found for', source);
+        // return noop entry
+        const input = () => {};
+        inputs.set(source, input);
+        return input;
+      }
+        
       const output = transformers
         .filter(transformer => transformer.deps.includes(source))
-        .reduceRight((push, { setup }) => setup(context, dedup(push)), dedup(...composers, push));
+        .reduceRight((push, { setup }) => setup(context, dedup(push)), dedup(...next));
+      
       const input = source.setup(context, output);
       outputs.set(source, output);
       inputs.set(source, input);
@@ -196,11 +171,10 @@ export function createTrackingPipeline({ window: windowContext = window, ...opti
 
   function stop() {
     if (!started) throw new Error('Pipeline not started');
-    for (const [item, stop] of inputs) {
+    for (const [item, stop] of inputs)
       if (item.type === 'producer') (stop as UnsubscribeHook)();
-      inputs.delete(item);
-      outputs.delete(item);
-    }
+    inputs.clear();
+    outputs.clear();
     while (stopListeners.length)
       stopListeners.pop()!();
     started = false;

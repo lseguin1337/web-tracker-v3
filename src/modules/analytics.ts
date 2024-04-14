@@ -1,7 +1,19 @@
+import { NoopModule } from "../lib";
 import { useTrackerConfig } from "../composables/use-tracker-config";
-import { useTrackingPipeline } from "../composables/use-tracking-pipeline";
+import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
 import { RageClickProducer, TextVisibilityProducer } from "../composers";
 import { ClickProducer } from "../producers";
+
+const AnalyticsUploader = consumer([
+  ClickProducer,
+  RageClickProducer,
+  TextVisibilityProducer,
+], () => {
+  return (event) => {
+    // TODO: batch event and submit them using http
+    console.log('Analytics Event:', event);
+  };
+});
 
 function TextVisibilityModule() {
   console.log('TextVisibilityModule init');
@@ -12,8 +24,6 @@ function TextVisibilityModule() {
   ]);
 }
 
-function NoopModule() {}
-
 export function AnalyticsModule() {
   console.log('AnalyticsModule init');
   const { textVisibility } = useTrackerConfig();
@@ -22,6 +32,7 @@ export function AnalyticsModule() {
   pipeline.use([
     ClickProducer,
     RageClickProducer,
+    AnalyticsUploader,
   ]);
 
   return [

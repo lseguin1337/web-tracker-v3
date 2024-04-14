@@ -119,6 +119,8 @@ export function mount(moduleFn: ModuleFn): Promise<ModuleInstance> {
   }
 }
 
+export const NoopModule: ModuleFn = () => [];
+
 // utils only for testing
 export function contextHelper<T extends Record<string, unknown>>(setup: () => T) {
   let isUsed = false;

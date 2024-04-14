@@ -1,11 +1,10 @@
-import { mount, onDestroy, onMounted } from './lib';
+import { mount, NoopModule, onDestroy, onMounted } from './lib';
 
 import { provideTrackerConfig, TagConfig } from './composables/use-tracker-config';
-import { RecordingModule } from './modules/recording';
 import { createTrackingPipeline } from './composables/use-tracking-pipeline';
-import { AnalyticsModule } from './modules/analytics';
 
-import './composers/index'
+import { RecordingModule } from './modules/recording';
+import { AnalyticsModule } from './modules/analytics';
 
 function WebTracker(config: TagConfig) {
   // expose context to sub modules
@@ -15,7 +14,7 @@ function WebTracker(config: TagConfig) {
   onMounted(() => {
     // call when all sub module are mounted...
     console.log('Pipeline starting...');
-    pipeline.start((event) => console.log('emit:', event));
+    pipeline.start();
   });
 
   onDestroy(() => {
@@ -25,7 +24,7 @@ function WebTracker(config: TagConfig) {
 
   return [
     AnalyticsModule,
-    ...(config.sessionRecordingEnabled ? [RecordingModule] : []),
+    config.sessionRecordingEnabled ? RecordingModule : NoopModule,
     // ... we can use any other sub module
   ];
 }
