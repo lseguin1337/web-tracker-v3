@@ -22,8 +22,8 @@ export function RecordingModule() {
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
-  pipeline.use([...producers, RecordingUploader]);
+  pipeline.use(...producers, RecordingUploader);
 
   if (config.anonymization)
-    pipeline.use([DOMAnonymizer]);
+    pipeline.use(DOMAnonymizer);
 }

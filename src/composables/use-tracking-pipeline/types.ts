@@ -18,7 +18,7 @@ export interface TrackingPipeline {
   /**
    * @description Register producers into the tracking pipeline
    */
-  use: (producers: PipelineInjectable[]) => void;
+  use: (...producers: PipelineInjectable[]) => void;
 
   /**
    * @description Supsend producer activity

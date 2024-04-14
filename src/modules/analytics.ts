@@ -19,9 +19,7 @@ function TextVisibilityModule() {
   console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
 
-  pipeline.use([
-    TextVisibilityProducer,
-  ]);
+  pipeline.use(TextVisibilityProducer);
 }
 
 export function AnalyticsModule() {
@@ -29,11 +27,7 @@ export function AnalyticsModule() {
   const { textVisibility } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
-  pipeline.use([
-    ClickProducer,
-    RageClickProducer,
-    AnalyticsUploader,
-  ]);
+  pipeline.use(ClickProducer, RageClickProducer, AnalyticsUploader);
 
   return [
     textVisibility ? TextVisibilityModule : NoopModule,
