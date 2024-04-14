@@ -5,6 +5,7 @@ export interface TagConfig {
   anonymization: boolean;
   sessionRecordingEnabled: boolean;
   textVisibility?: boolean;
+  heatmap?: boolean;
   // any other stuff here
 }
 

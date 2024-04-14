@@ -110,7 +110,7 @@ export function createPipeline({ window: windowContext = window, ...options }: P
     };
   }
 
-  function use(...items: (Source<any> | Transformer<any, any> | Consumer<T>)[]) {
+  function use(...items: (Source<any> | Transformer<any, any> | Consumer<any>)[]) {
     for (const item of items) {
       registry.add(item);
       // auto inject dependencies
@@ -145,7 +145,7 @@ export function createPipeline({ window: windowContext = window, ...options }: P
         inputs.set(source, input);
         return input;
       }
-        
+
       const output = transformers
         .filter(transformer => transformer.deps.includes(source))
         .reduceRight((push, { setup }) => setup(context, dedup(push)), dedup(...next));

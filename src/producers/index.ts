@@ -1,4 +1,4 @@
-import { producer } from "../composables/use-tracking-pipeline";
+import { composer, producer } from "../composables/use-tracking-pipeline";
 
 interface SerializedEvent {
   type: string;
@@ -19,6 +19,17 @@ export const ClickProducer = producer<SerializedEvent>(({ document }, push) => {
 export const MouseMoveProducer = producer<SerializedEvent>(({ window }, push) => {
   console.log('MouseMoveProducer init');
   return listen(window, 'mousemove', push);
+});
+
+export const ThrottledMouseMoveProducer = composer<SerializedEvent, SerializedEvent>([MouseMoveProducer], (_, push) => {
+  console.log('ThrottledMouseMoveProducer init');
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (event) => {
+    if (timer === null) {
+      timer = setTimeout(() => (timer = null), 400);
+      push(event);
+    }
+  };
 });
 
 export const InputProducer = producer<SerializedEvent>(({ document }, push) => {
