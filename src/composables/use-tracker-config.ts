@@ -2,8 +2,8 @@ import { createContext, inject, provide } from "../lib";
 
 export interface TagConfig {
   tagVersion: string;
-  anonymization: boolean;
-  sessionRecordingEnabled: boolean;
+  anonymization?: boolean;
+  recording?: boolean;
   textVisibility?: boolean;
   heatmap?: boolean;
   // any other stuff here

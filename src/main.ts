@@ -7,6 +7,7 @@ import { RecordingModule } from './modules/recording';
 import { AnalyticsModule } from './modules/analytics';
 
 function WebTracker(config: TagConfig) {
+  if (__DEBUG__) console.time('WebTrackerInit');
   // expose context to sub modules
   const pipeline = createTrackingPipeline();
   provideTrackerConfig(config);
@@ -15,6 +16,8 @@ function WebTracker(config: TagConfig) {
     // call when all sub module are mounted...
     if (__DEBUG__) console.log('Pipeline starting...');
     pipeline.start();
+    // to measure the time to load the tag
+    if (__DEBUG__) console.timeEnd('WebTrackerInit');
   });
 
   onDestroy(() => {
@@ -24,20 +27,19 @@ function WebTracker(config: TagConfig) {
 
   return [
     AnalyticsModule,
-    config.sessionRecordingEnabled ? RecordingModule : NoopModule,
+    config.recording ? RecordingModule : NoopModule,
     // ... we can use any other sub module
   ];
 }
 
 async function bootstrap() {
-  const tracker = await mount(() => WebTracker({
-    sessionRecordingEnabled: true,
+  await mount(() => WebTracker({
+    recording: false,
     anonymization: true,
     textVisibility: false,
     heatmap: true,
     tagVersion: 'demo'
   }));
-  if (__DEBUG__) console.log(tracker);
 }
 
 bootstrap();
