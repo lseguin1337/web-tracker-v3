@@ -39,7 +39,7 @@ export const InputProducer = producer<SerializedEvent<'change'>>(({ document }, 
 
 export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>(({ document, window }, push) => {
   if (__DEBUG__)  console.log('DOMProducer init');
-  // todo serialze document
+  // TODO: serialze document
   push({ type: 'initialDom', args: [document] });
 
   // TODO: handle shadow root, adoptedStylesheets
