@@ -23,7 +23,15 @@ yarn build
 Start the application using:
 
 ```shell
-yarn start
+yarn dev
+```
+
+## Run in Debug mode
+
+Start the application using:
+
+```shell
+yarn debug
 ```
 
 ## Test
