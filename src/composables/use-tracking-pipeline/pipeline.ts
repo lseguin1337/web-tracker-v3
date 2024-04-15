@@ -1,9 +1,9 @@
 import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineOptions } from "./types";
 
 /**
- * @description Events Producer
+ * @description Emit events
  */
-export function producer<T>(setup: ProducerSetup<T>): Producer<T> {
+export function producer<Out>(setup: ProducerSetup<Out>): Producer<Out> {
   return {
     type: 'producer',
     setup,
@@ -13,7 +13,7 @@ export function producer<T>(setup: ProducerSetup<T>): Producer<T> {
 /**
  * @description Transform a Producer/Composer behavior
  */
-export function transformer<T, U>(source: Source<T>, setup: TransformerSetup<T, U>): Transformer<T, U> {
+export function transformer<In, Out>(source: Source<In>, setup: TransformerSetup<In, Out>): Transformer<In, Out> {
   return {
     type: 'transformer',
     deps: [source],
@@ -22,9 +22,9 @@ export function transformer<T, U>(source: Source<T>, setup: TransformerSetup<T, 
 }
 
 /**
- * @description Generate new Event From other 
+ * @description Combine events to generate new ones
  */
-export function composer<T, U>(sources: Source<T>[], setup: ComposerSetup<T, U>): Composer<T, U> {
+export function composer<In, Out>(sources: Source<In>[], setup: ComposerSetup<In, Out>): Composer<In, Out> {
   return {
     type: 'composer',
     deps: sources,
@@ -35,7 +35,7 @@ export function composer<T, U>(sources: Source<T>[], setup: ComposerSetup<T, U>)
 /**
  * @description Consume events
  */
-export function consumer<T>(sources: Source<T>[], setup: ConsumerSetup<T>): Consumer<T> {
+export function consumer<In>(sources: Source<In>[], setup: ConsumerSetup<In>): Consumer<In> {
   return {
     type: 'consumer',
     deps: sources,

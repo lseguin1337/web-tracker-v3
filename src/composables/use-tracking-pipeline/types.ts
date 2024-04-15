@@ -29,33 +29,33 @@ export interface TrackingPipeline {
 
 export type PipelineOptions = Partial<Omit<PipelineContext, 'onStop'>>;
 
-export interface Producer<T> {
+export interface Producer<Out> {
   type: 'producer';
-  setup: ProducerSetup<T>;
+  setup: ProducerSetup<Out>;
 }
 
-export interface Transformer<T, U> {
+export interface Transformer<In, Out> {
   type: 'transformer';
-  deps: Source<T>[];
-  setup: TransformerSetup<T, U>
+  deps: Source<In>[];
+  setup: TransformerSetup<In, Out>
 }
 
-export interface Composer<T, U> {
+export interface Composer<In, Out> {
   type: 'composer';
-  deps: Source<T>[];
-  setup: ComposerSetup<T, U>;
+  deps: Source<In>[];
+  setup: ComposerSetup<In, Out>;
 }
 
-export interface Consumer<T> {
+export interface Consumer<In> {
   type: 'consumer';
-  deps: Source<T>[];
-  setup: ConsumerSetup<T>;
+  deps: Source<In>[];
+  setup: ConsumerSetup<In>;
 }
 
-export type Source<T = unknown> = Producer<T> | Composer<any, T>;
+export type Source<Out = unknown> = Producer<Out> | Composer<any, Out>;
 export type PipelineInjectable = Producer<any> | Composer<any, any> | Transformer<any, any> | Consumer<any>;
 
-export type ProducerSetup<T> = (ctx: PipelineContext, push: EventHook<T>) => UnsubscribeHook;
-export type TransformerSetup<T, U> = (ctx: PipelineContext, push: EventHook<U>) => EventHook<T>;
-export type ComposerSetup<T, U> = (ctx: PipelineContext, push: EventHook<U>) => EventHook<T>;
-export type ConsumerSetup<T> = (ctx: PipelineContext) => EventHook<T>;
+export type ProducerSetup<Out> = (ctx: PipelineContext, push: EventHook<Out>) => UnsubscribeHook;
+export type TransformerSetup<In, Out> = (ctx: PipelineContext, push: EventHook<Out>) => EventHook<In>;
+export type ComposerSetup<In, Out> = (ctx: PipelineContext, push: EventHook<Out>) => EventHook<In>;
+export type ConsumerSetup<In> = (ctx: PipelineContext) => EventHook<In>;

@@ -7,8 +7,8 @@ interface SerializedEvent {
 
 function listen(target: EventTarget, eventName: string, push: (event: SerializedEvent) => void) {
   const handler = (e: Event) => push({ type: eventName, args: [e] });
-  target.addEventListener(eventName, handler);
-  return () => target.removeEventListener(eventName, handler);
+  target.addEventListener(eventName, handler, { capture: true });
+  return () => target.removeEventListener(eventName, handler, { capture: true });
 }
 
 export const ClickProducer = producer<SerializedEvent>(({ document }, push) => {
