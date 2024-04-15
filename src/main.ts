@@ -3,8 +3,8 @@ import { mount, NoopModule, onDestroy, onMounted } from './lib';
 import { provideTrackerConfig, TagConfig } from './composables/use-tracker-config';
 import { createTrackingPipeline } from './composables/use-tracking-pipeline';
 
-import { RecordingModule } from './modules/recording';
 import { AnalyticsModule } from './modules/analytics';
+import { RecordingModule } from './modules/recording';
 
 function WebTracker(config: TagConfig) {
   if (__DEBUG__) console.time('WebTrackerInit');
