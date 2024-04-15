@@ -146,13 +146,13 @@ interface RageClickEvent {
 
 type AnyEvent = ClickEvent | RageClickEvent;
 
-const ClickProducer = producer<ClickEvent>((ctx, push) => {
+const ClickProducer = producer<ClickEvent>((push) => {
   const handler = (event) => push({ type: 'click', date: event.timeStamp });
-  ctx.document.addEventListener('click', handler);
-  return () => ctx.document.removeEventListener('click', handler);
+  document.addEventListener('click', handler);
+  return () => document.removeEventListener('click', handler);
 });
 
-const RageClickProducer = composer<ClickEvent, RageClickEvent>([ClickProducer], (ctx, push) => {
+const RageClickProducer = composer<ClickEvent, RageClickEvent>([ClickProducer], (push) => {
   let dates: number[] = [];
   return (clickEvent: ClickEvent) => {
     dates.push(clickEvent.date);
@@ -164,7 +164,7 @@ const RageClickProducer = composer<ClickEvent, RageClickEvent>([ClickProducer], 
   };
 });
 
-const RequestBatcher = consumer([ClickProducer, RageClickProducer], (ctx) => {
+const RequestBatcher = consumer([ClickProducer, RageClickProducer], () => {
   let batch: AnyEvent[] = [];
   return (event: AnyEvent) => {
     batch.push(event);
@@ -175,7 +175,7 @@ const RequestBatcher = consumer([ClickProducer, RageClickProducer], (ctx) => {
   };
 });
 
-const pipeline = createPipeline({ window });
+const pipeline = createPipeline();
 
 // register ClickProducer, RageClickProducer and RequestBatcher consumer
 pipeline.use(ClickProducer, RageClickProducer, RequestBatcher);
