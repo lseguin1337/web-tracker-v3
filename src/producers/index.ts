@@ -47,6 +47,7 @@ export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>
     // TODO: of course we will have to serialize this shit
     push({ type: 'mutations', args: [mutations] });
   });
+
   mutationObserver.observe(document, {
     attributes: true,
     characterData: true,
@@ -60,14 +61,14 @@ export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>
   };
 });
 
-export const RageClickProducer = composer<SerializedEvent<'click'>, SerializedEvent<'RageClick'>>([ClickProducer], (_, push) => {
+export const RageClickProducer = composer<SerializedEvent<'click'>, SerializedEvent<'rageClick'>>([ClickProducer], (_, push) => {
   console.log('RageClickProducer init');
   const dates: number[] = [];
   return (event) => {
     dates.push(event.args[0].timeStamp);
     if (dates.length > 3) dates.shift();
     if (dates.length === 3 && dates[2] - dates[0] < 300) {
-      push({ type: 'RageClick', args: [] });
+      push({ type: 'rageClick', args: [] });
       dates.splice(0,3);
     }
   };
