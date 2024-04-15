@@ -1,7 +1,7 @@
 import { transformer } from "../composables/use-tracking-pipeline";
 import { DOMProducer } from "../producers";
 
-export const DOMAnonymizer = transformer(DOMProducer, (_, push) => {
+export const DOMAnonymizer = transformer(DOMProducer, (push) => {
   if (__DEBUG__) console.log('DOMAnonymizer init');
   return (event) => {
     // simple pass through

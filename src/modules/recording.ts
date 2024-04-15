@@ -1,12 +1,12 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { ClickProducer, DOMProducer, InputProducer, MouseMoveProducer, SerializedEvent } from "../producers";
+import { ClickProducer, DOMProducer, InputChangeProducer, MouseMoveProducer, SerializedEvent } from "../producers";
 import { DOMAnonymizer } from "../transformers";
 
 // All producers used by the SR Module
 const producers = [
   ClickProducer,
-  InputProducer,
+  InputChangeProducer,
   MouseMoveProducer,
   DOMProducer,
 ];
