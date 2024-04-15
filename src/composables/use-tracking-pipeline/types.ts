@@ -5,8 +5,6 @@ export type UnsubscribeHook = () => void;
 export type PipelineContextKey<T = unknown> = Symbol & { _: T }
 
 export interface PipelineContext {
-  document: Document;
-  window: Window & typeof globalThis;
   onStop: (handler: () => void) => void;
   get: <T>(key: PipelineContextKey<T>) => T;
 }
@@ -59,7 +57,7 @@ export interface Consumer<In> {
 export type Source<Out = unknown> = Producer<Out> | Composer<any, Out>;
 export type PipelineInjectable = Producer<any> | Composer<any, any> | Transformer<any, any> | Consumer<any>;
 
-export type ProducerSetup<Out> = (ctx: PipelineContext, push: EventHook<Out>) => UnsubscribeHook;
-export type TransformerSetup<In, Out> = (ctx: PipelineContext, push: EventHook<Out>) => EventHook<In>;
-export type ComposerSetup<In, Out> = (ctx: PipelineContext, push: EventHook<Out>) => EventHook<In>;
-export type ConsumerSetup<In> = (ctx: PipelineContext) => EventHook<In>;
+export type ProducerSetup<Out> = (push: EventHook<Out>) => UnsubscribeHook;
+export type TransformerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
+export type ComposerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
+export type ConsumerSetup<In> = () => EventHook<In>;

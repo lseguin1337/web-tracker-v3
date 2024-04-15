@@ -1,4 +1,6 @@
-import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineOptions, PipelineContextKey } from "./types";
+import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineContextKey } from "./types";
+
+let current: PipelineContext | null = null;
 
 /**
  * @description Emit events
@@ -83,7 +85,21 @@ export function createPipelineContext<T = unknown>() {
   return Symbol() as unknown as PipelineContextKey<T>;
 }
 
-export function createPipeline({ window: windowContext = window }: PipelineOptions = {}) {
+function throwContextNotAvailable(): never {
+  throw new Error('Pipeline context not available')
+}
+
+export function usePipelineContext<T>(key: PipelineContextKey<T>): T {
+  if (!current) throwContextNotAvailable();
+  return current.get(key);
+}
+
+export function onStop(fn: () => void) {
+  if (!current) throwContextNotAvailable();
+  return current.onStop(fn);
+}
+
+export function createPipeline() {
   const registry = new Set<PipelineInjectable>();
   const stopListeners: (() => void)[] = [];
   const inputs = new Map<Source<any> | Consumer<any>, EventHook<any> | UnsubscribeHook | null>();
@@ -93,8 +109,6 @@ export function createPipeline({ window: windowContext = window }: PipelineOptio
   let started = false;
 
   const context: PipelineContext = {
-    window: windowContext,
-    document: windowContext.document,
     onStop: (handler) => stopListeners.push(handler),
     get: <T>(key: PipelineContextKey<T>) => defined.get(key) as T,
   };
@@ -112,14 +126,21 @@ export function createPipeline({ window: windowContext = window }: PipelineOptio
     defined.set(key, value);
   }
 
+  function useContext(fn: () => void) {
+    const old = current;
+    current = context;
+    fn();
+    current = old;
+  }
+
   function suspend(...producers: Producer<any>[]) {
     if (!started) throwNotStarted();
     const suspended = producers.map((producer) => {
       (inputs.get(producer) as UnsubscribeHook)();
-      return () => producer.setup(context, outputs.get(producer)!);
+      return () => producer.setup(outputs.get(producer)!);
     });
     return () => {
-      for (const restore of suspended) restore();
+      useContext(() => suspended.forEach(restore => restore()));
     };
   }
 
@@ -148,7 +169,7 @@ export function createPipeline({ window: windowContext = window }: PipelineOptio
       }
 
       if (source.type === 'consumer') {
-        const input = source.setup(context);
+        const input = source.setup();
         inputs.set(source, input);
         return input;
       }
@@ -170,14 +191,14 @@ export function createPipeline({ window: windowContext = window }: PipelineOptio
 
       const output = transformers
         .filter(transformer => transformer.deps.includes(source))
-        .reduceRight((push, { setup }) => setup(context, dedup(push)), dedup(...next));
-      
-      const input = source.setup(context, output);
+        .reduceRight((push, { setup }) => setup(dedup(push)), dedup(...next));
+
+      const input = source.setup(output);
       outputs.set(source, output);
       inputs.set(source, input);
       return input;
     }
-    sources.map(resolve);
+    useContext(() => sources.map(resolve));
     started = true;
   }
 
