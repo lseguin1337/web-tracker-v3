@@ -167,7 +167,7 @@ const RequestBatcher = consumer([ClickProducer, RageClickProducer], (ctx) => {
   };
 });
 
-const pipeline = createPipeline({ window, document });
+const pipeline = createPipeline({ window });
 
 // register ClickProducer, RageClickProducer and RequestBatcher consumer
 pipeline.use(ClickProducer, RageClickProducer, RequestBatcher);
