@@ -12,17 +12,17 @@ function listen<T extends string>(target: EventTarget, eventName: T, push: (even
 }
 
 export const ClickProducer = producer<SerializedEvent<'click'>>(({ document }, push) => {
-  console.log('ClickProducer init');
+  if (__DEV__) console.log('ClickProducer init');
   return listen(document, 'click', push);
 });
 
 export const MouseMoveProducer = producer<SerializedEvent<'mousemove'>>(({ window }, push) => {
-  console.log('MouseMoveProducer init');
+  if (__DEV__) console.log('MouseMoveProducer init');
   return listen(window, 'mousemove', push);
 });
 
 export const ThrottledMouseMoveProducer = composer<SerializedEvent<'mousemove'>, SerializedEvent<'mousemove'>>([MouseMoveProducer], (_, push) => {
-  console.log('ThrottledMouseMoveProducer init');
+  if (__DEV__) console.log('ThrottledMouseMoveProducer init');
   let timer: ReturnType<typeof setTimeout> | null = null;
   return (event) => {
     if (timer === null) {
@@ -33,12 +33,12 @@ export const ThrottledMouseMoveProducer = composer<SerializedEvent<'mousemove'>,
 });
 
 export const InputProducer = producer<SerializedEvent<'change'>>(({ document }, push) => {
-  console.log('InputProducer init');
+  if (__DEV__)  console.log('InputProducer init');
   return listen(document, 'change', push);
 });
 
 export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>(({ document, window }, push) => {
-  console.log('DOMProducer init');
+  if (__DEV__)  console.log('DOMProducer init');
   // todo serialze document
   push({ type: 'initialDom', args: [document] });
 
@@ -56,13 +56,13 @@ export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>
   });
 
   return () => {
-    console.log('DOMProducer destroyed');
+    if (__DEV__) console.log('DOMProducer destroyed');
     mutationObserver.disconnect();
   };
 });
 
 export const RageClickProducer = composer<SerializedEvent<'click'>, SerializedEvent<'rageClick'>>([ClickProducer], (_, push) => {
-  console.log('RageClickProducer init');
+  if (__DEV__) console.log('RageClickProducer init');
   const dates: number[] = [];
   return (event) => {
     dates.push(event.args[0].timeStamp);
@@ -75,7 +75,7 @@ export const RageClickProducer = composer<SerializedEvent<'click'>, SerializedEv
 });
 
 export const TextVisibilityProducer = composer<SerializedEvent, SerializedEvent<'textVisibility'>>([DOMProducer], (_, push) => {
-  console.log('TextVisibilityProducer init');
+  if (__DEV__) console.log('TextVisibilityProducer init');
   let i = 0;
   return (_) => {
     if (i++ % 2) push({ type: 'textVisibility', args: [] });

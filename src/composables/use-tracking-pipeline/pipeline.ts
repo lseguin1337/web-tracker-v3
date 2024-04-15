@@ -64,7 +64,7 @@ function createOutputsHandler() {
       }
 
       if (rescheduledTasks.length > 0 || (countSyncHook % 5 === 0 && Date.now() - refDate > 30)) {
-        console.log('Pipeline re-scheduled');
+        if (__DEV__) console.log('Pipeline re-scheduled');
         // reschedule forwarding
         rescheduledTasks.push(() => push(event));
         return;

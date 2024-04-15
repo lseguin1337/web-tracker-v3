@@ -16,19 +16,19 @@ const AnalyticsUploader = consumer<SerializedEvent>([
 });
 
 function HeatmapModule() {
-  console.log('HeatmapModule init');
+  if (__DEV__) console.log('HeatmapModule init');
   const pipeline = useTrackingPipeline();
   pipeline.use(ThrottledMouseMoveProducer);
 }
 
 function TextVisibilityModule() {
-  console.log('TextVisibilityModule init');
+  if (__DEV__) console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
   pipeline.use(TextVisibilityProducer);
 }
 
 export function AnalyticsModule() {
-  console.log('AnalyticsModule init');
+  if (__DEV__) console.log('AnalyticsModule init');
   const { textVisibility, heatmap } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 

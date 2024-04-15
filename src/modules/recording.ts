@@ -20,7 +20,7 @@ const RecordingUploader = consumer<SerializedEvent>(producers, () => {
 });
 
 export function RecordingModule() {
-  console.log('RecordingModule init');
+  if (__DEV__) console.log('RecordingModule init');
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
