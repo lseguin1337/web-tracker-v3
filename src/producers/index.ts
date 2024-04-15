@@ -1,27 +1,27 @@
 import { composer, producer } from "../composables/use-tracking-pipeline";
 
-interface SerializedEvent {
-  type: string;
+export interface SerializedEvent<T extends string = string> {
+  type: T;
   args: any[];
 }
 
-function listen(target: EventTarget, eventName: string, push: (event: SerializedEvent) => void) {
+function listen<T extends string>(target: EventTarget, eventName: T, push: (event: SerializedEvent<T>) => void) {
   const handler = (e: Event) => push({ type: eventName, args: [e] });
   target.addEventListener(eventName, handler, { capture: true });
   return () => target.removeEventListener(eventName, handler, { capture: true });
 }
 
-export const ClickProducer = producer<SerializedEvent>(({ document }, push) => {
+export const ClickProducer = producer<SerializedEvent<'click'>>(({ document }, push) => {
   console.log('ClickProducer init');
   return listen(document, 'click', push);
 });
 
-export const MouseMoveProducer = producer<SerializedEvent>(({ window }, push) => {
+export const MouseMoveProducer = producer<SerializedEvent<'mousemove'>>(({ window }, push) => {
   console.log('MouseMoveProducer init');
   return listen(window, 'mousemove', push);
 });
 
-export const ThrottledMouseMoveProducer = composer<SerializedEvent, SerializedEvent>([MouseMoveProducer], (_, push) => {
+export const ThrottledMouseMoveProducer = composer<SerializedEvent<'mousemove'>, SerializedEvent<'mousemove'>>([MouseMoveProducer], (_, push) => {
   console.log('ThrottledMouseMoveProducer init');
   let timer: ReturnType<typeof setTimeout> | null = null;
   return (event) => {
@@ -32,12 +32,12 @@ export const ThrottledMouseMoveProducer = composer<SerializedEvent, SerializedEv
   };
 });
 
-export const InputProducer = producer<SerializedEvent>(({ document }, push) => {
+export const InputProducer = producer<SerializedEvent<'change'>>(({ document }, push) => {
   console.log('InputProducer init');
   return listen(document, 'change', push);
 });
 
-export const DOMProducer = producer<SerializedEvent>(({ document, window }, push) => {
+export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>(({ document, window }, push) => {
   console.log('DOMProducer init');
   // todo serialze document
   push({ type: 'initialDom', args: [document] });
@@ -57,5 +57,26 @@ export const DOMProducer = producer<SerializedEvent>(({ document, window }, push
   return () => {
     console.log('DOMProducer destroyed');
     mutationObserver.disconnect();
+  };
+});
+
+export const RageClickProducer = composer<SerializedEvent<'click'>, SerializedEvent<'RageClick'>>([ClickProducer], (_, push) => {
+  console.log('RageClickProducer init');
+  const dates: number[] = [];
+  return (event) => {
+    dates.push(event.args[0].timeStamp);
+    if (dates.length > 3) dates.shift();
+    if (dates.length === 3 && dates[2] - dates[0] < 300) {
+      push({ type: 'RageClick', args: [] });
+      dates.splice(0,3);
+    }
+  };
+});
+
+export const TextVisibilityProducer = composer<SerializedEvent, SerializedEvent<'textVisibility'>>([DOMProducer], (_, push) => {
+  console.log('TextVisibilityProducer init');
+  let i = 0;
+  return (_) => {
+    if (i++ % 2) push({ type: 'textVisibility', args: [] });
   };
 });

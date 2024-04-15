@@ -1,6 +1,6 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { ClickProducer, DOMProducer, InputProducer, MouseMoveProducer } from "../producers";
+import { ClickProducer, DOMProducer, InputProducer, MouseMoveProducer, SerializedEvent } from "../producers";
 import { DOMAnonymizer } from "../transformers";
 
 // All producers used by the SR Module
@@ -12,7 +12,7 @@ const producers = [
 ];
 
 // Recording Payloads
-const RecordingUploader = consumer(producers, () => {
+const RecordingUploader = consumer<SerializedEvent>(producers, () => {
   return (event) => {
     // TODO: batch event and submit them using http
     console.log('Recording Event:', event);
