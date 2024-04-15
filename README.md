@@ -64,8 +64,8 @@ const RootModule = () => {
 mount(RootModule); // mount the app
 ```
 
-Keep in mind you can pass information to a child module using arguments it's not manadatory to use the context.
-The context should be used when you know any level of your nested module can access to an information
+Keep in mind you can pass some informations to a child module using arguments it's not manadatory to use the context.
+The context should be used only when you want to share some information to a nested children. Or when it make sense to have a shared context.
 
 ```typescript
 import { mount } from './lib';
