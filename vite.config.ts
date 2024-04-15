@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ mode }) => {
   return {
     define: {
-      __DEV__: command === 'serve',
+      __DEV__: mode === 'development',
+      __DEBUG__: process.env.NODE_ENV === 'debug',
     },
     build: {
       modulePreload: false,
@@ -13,7 +14,7 @@ export default defineConfig(({ command }) => {
         },
         input: {
           index: './index.html',
-          webTracker: './src/main.ts',
+          tracker: './src/main.ts',
           website: './sitefortest/main.js'
         }
       }

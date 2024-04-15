@@ -13,14 +13,15 @@ const producers = [
 
 // Recording Payloads
 const RecordingUploader = consumer<SerializedEvent>(producers, () => {
+  if (__DEBUG__) console.log('RecordingUploader init');
   return (event) => {
     // TODO: batch event and submit them using http
-    console.log('Recording Event:', event);
+    if (__DEBUG__) console.log(' RecordingEvent:', event);
   };
 });
 
 export function RecordingModule() {
-  if (__DEV__) console.log('RecordingModule init');
+  if (__DEBUG__) console.log('RecordingModule init');
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 

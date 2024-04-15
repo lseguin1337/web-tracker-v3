@@ -13,7 +13,7 @@ function WebTracker(config: TagConfig) {
 
   onMounted(() => {
     // call when all sub module are mounted...
-    if (__DEV__) console.log('Pipeline starting...');
+    if (__DEBUG__) console.log('Pipeline starting...');
     pipeline.start();
   });
 
@@ -37,7 +37,7 @@ async function bootstrap() {
     heatmap: true,
     tagVersion: 'demo'
   }));
-  if (__DEV__) console.log(tracker);
+  if (__DEBUG__) console.log(tracker);
 }
 
 bootstrap();

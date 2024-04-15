@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "dev": "vite",
+    "debug": "NODE_ENV=debug vite",
     "build": "vite build",
     "preview": "vite preview"
   },

@@ -9,26 +9,27 @@ const AnalyticsUploader = consumer<SerializedEvent>([
   TextVisibilityProducer,
   ThrottledMouseMoveProducer,
 ], () => {
+  if (__DEBUG__) console.log('AnalyticsUploader init');
   return (event) => {
     // TODO: batch event and submit them using http
-    console.log('Analytics Event:', event);
+    if (__DEBUG__) console.log(' AnalyticsEvent:', event);
   };
 });
 
 function HeatmapModule() {
-  if (__DEV__) console.log('HeatmapModule init');
+  if (__DEBUG__) console.log('HeatmapModule init');
   const pipeline = useTrackingPipeline();
   pipeline.use(ThrottledMouseMoveProducer);
 }
 
 function TextVisibilityModule() {
-  if (__DEV__) console.log('TextVisibilityModule init');
+  if (__DEBUG__) console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
   pipeline.use(TextVisibilityProducer);
 }
 
 export function AnalyticsModule() {
-  if (__DEV__) console.log('AnalyticsModule init');
+  if (__DEBUG__) console.log('AnalyticsModule init');
   const { textVisibility, heatmap } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
