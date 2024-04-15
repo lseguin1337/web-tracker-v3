@@ -1,4 +1,4 @@
-import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineOptions } from "./types";
+import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineOptions, PipelineContextKey } from "./types";
 
 /**
  * @description Emit events
@@ -79,28 +79,41 @@ function createOutputsHandler() {
   }
 }
 
-export function createPipeline({ window: windowContext = window, ...options }: PipelineOptions = {}) {
+export function createPipelineContext<T = unknown>() {
+  return Symbol() as unknown as PipelineContextKey<T>;
+}
+
+export function createPipeline({ window: windowContext = window }: PipelineOptions = {}) {
   const registry = new Set<PipelineInjectable>();
   const stopListeners: (() => void)[] = [];
-  const inputs = new Map<Source<any> | Consumer<any>, EventHook<any> | UnsubscribeHook>();
+  const inputs = new Map<Source<any> | Consumer<any>, EventHook<any> | UnsubscribeHook | null>();
   const outputs = new Map<Source<any>, EventHook<any>>();
+  const defined = new Map<PipelineContextKey<unknown>, unknown>();
 
   let started = false;
 
   const context: PipelineContext = {
     window: windowContext,
-    document: options.document || windowContext.document,
-    ...options,
+    document: windowContext.document,
     onStop: (handler) => stopListeners.push(handler),
-    // TODO: should we expose suspend here?
+    get: <T>(key: PipelineContextKey<T>) => defined.get(key) as T,
   };
 
-  function define(key: symbol, value: any) {
-    context[key] = value;
+  function throwAlreadyStarted(): never {
+    throw new Error('Pipeline already started');
   }
 
-  function suspend(producers: Producer<any>[]) {
-    if (!started) throw new Error('Pipeline not started: suspend is not available');
+  function throwNotStarted(): never {
+    throw new Error('Pipeline not started yet');
+  }
+
+  function define<T>(key: PipelineContextKey<T>, value: T) {
+    if (started) throwAlreadyStarted();
+    defined.set(key, value);
+  }
+
+  function suspend(...producers: Producer<any>[]) {
+    if (!started) throwNotStarted();
     const suspended = producers.map((producer) => {
       (inputs.get(producer) as UnsubscribeHook)();
       return () => producer.setup(context, outputs.get(producer)!);
@@ -120,7 +133,7 @@ export function createPipeline({ window: windowContext = window, ...options }: P
   }
 
   function start() {
-    if (started) throw new Error('Pieline already started');
+    if (started) throwAlreadyStarted();
     const entries = Array.from(registry);
     const sources = entries.filter(s => s.type !== 'transformer');
     const transformers = entries.filter(s => s.type === 'transformer');
@@ -128,8 +141,11 @@ export function createPipeline({ window: windowContext = window, ...options }: P
     const dedup = createOutputsHandler();
 
     function resolve(source: Source<any> | Consumer<any>): EventHook<any> | (() => void) {
-      if (inputs.has(source))
-        return inputs.get(source)!;
+      if (inputs.has(source)) {
+        const instance = inputs.get(source);
+        if (!instance) throw new Error('No consumer');
+        return instance;
+      }
 
       if (source.type === 'consumer') {
         const input = source.setup(context);
@@ -137,13 +153,19 @@ export function createPipeline({ window: windowContext = window, ...options }: P
         return input;
       }
 
-      const next = sources.filter(child => (child.type === 'composer' || child.type === 'consumer') && child.deps.includes(source)).map(resolve);
+      const next = sources.filter(child => (child.type === 'composer' || child.type === 'consumer') && child.deps.includes(source)).map((source) => {
+        try {
+          return resolve(source);
+        } catch {
+          return null;
+        }
+      }).filter(instance => !!instance);
+
       if (next.length === 0) {
         console.warn('No consumer found for', source);
+        inputs.set(source, null);
         // return noop entry
-        const input = () => {};
-        inputs.set(source, input);
-        return input;
+        throw new Error('No consumer');
       }
 
       const output = transformers
@@ -160,7 +182,7 @@ export function createPipeline({ window: windowContext = window, ...options }: P
   }
 
   function stop() {
-    if (!started) throw new Error('Pipeline not started');
+    if (!started) throwNotStarted();
     for (const [item, stop] of inputs)
       if (item.type === 'producer') (stop as UnsubscribeHook)();
     inputs.clear();

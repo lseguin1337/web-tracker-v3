@@ -2,18 +2,20 @@ export type EventHook<T = unknown> = (event: T) => void
 
 export type UnsubscribeHook = () => void;
 
+export type PipelineContextKey<T = unknown> = Symbol & { _: T }
+
 export interface PipelineContext {
   document: Document;
   window: Window & typeof globalThis;
   onStop: (handler: () => void) => void;
-  [key: symbol]: unknown;
+  get: <T>(key: PipelineContextKey<T>) => T;
 }
 
 export interface TrackingPipeline {
   /**
    * @description Define value into the pipeline context
    */
-  define: (key: Symbol, value: unknown) => void;
+  define: <T>(key: PipelineContextKey<T>, value: T) => void;
 
   /**
    * @description Register producers into the tracking pipeline
@@ -24,10 +26,12 @@ export interface TrackingPipeline {
    * @description Supsend producer activity
    * @returns Restore producer activity
    */
-  suspend: (producers: Producer<any>[]) => (() => {});
+  suspend: (...producers: Producer<any>[]) => (() => {});
 }
 
-export type PipelineOptions = Partial<Omit<PipelineContext, 'onStop'>>;
+export type PipelineOptions = Partial<{
+  window: Window & typeof globalThis;
+}>;
 
 export interface Producer<Out> {
   type: 'producer';

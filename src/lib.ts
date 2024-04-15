@@ -1,6 +1,5 @@
 // context.ts
 let current: ModuleContext | null = null;
-let ctxId = 0;
 
 interface ModuleContext {
   parent: null | ModuleContext;
@@ -8,10 +7,10 @@ interface ModuleContext {
     mount: FnHook[];
     destroy: FnHook[];
   },
-  providers: Map<String, unknown>;
+  providers: Map<Context<unknown>, unknown>;
 }
 
-export type Context<T> = String & { __: T };
+export type Context<T> = Symbol & { _: T };
 
 type ModuleFnOutput = void | ModuleFn | ModuleFn[] | Promise<void | ModuleFn | ModuleFn[]>;
 export type ModuleFn = () => ModuleFnOutput;
@@ -40,8 +39,8 @@ export function inject<T>(token: Context<T>): T {
   throw new Error('context not available');
 }
 
-export function createContext<T>(name: string = `context_${ctxId++}`) {
-  return String(name) as unknown as Context<T>;
+export function createContext<T>() {
+  return Symbol() as unknown as Context<T>;
 }
 
 function isPromise(value: unknown): value is Promise<unknown> {
