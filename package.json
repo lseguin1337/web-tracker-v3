@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "vite",
-    "debug": "NODE_ENV=debug vite",
+    "dev": "vite --open",
+    "debug": "NODE_ENV=debug yarn dev",
     "build": "vite build",
     "preview": "vite preview"
   },
