@@ -1,7 +1,6 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { ClickProducer, DOMProducer, InputChangeProducer, MouseMoveProducer, SerializedEvent } from "../producers";
-import { DOMAnonymizer } from "../transformers";
+import { ClickProducer, DOMAnonymizerTransformer, DOMProducer, InputChangeProducer, MouseMoveProducer, SerializedEvent } from "../producers";
 
 // All producers used by the SR Module
 const producers = [
@@ -28,5 +27,5 @@ export function RecordingModule() {
   pipeline.use(...producers, RecordingUploader);
 
   if (config.anonymization)
-    pipeline.use(DOMAnonymizer);
+    pipeline.use(DOMAnonymizerTransformer);
 }

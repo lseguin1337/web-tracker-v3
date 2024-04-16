@@ -15,7 +15,7 @@ export function producer<Out>(setup: ProducerSetup<Out>): Producer<Out> {
 /**
  * @description Transform a Producer/Composer behavior
  */
-export function transformer<In, Out>(source: Source<In>, setup: TransformerSetup<In, Out>): Transformer<In, Out> {
+export function transformer<In, Out = In>(source: Source<In>, setup: TransformerSetup<In, Out>): Transformer<In, Out> {
   return {
     type: 'transformer',
     deps: [source],
