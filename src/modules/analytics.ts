@@ -12,7 +12,7 @@ const AnalyticsUploader = consumer<SerializedEvent>([
   if (__DEBUG__) console.log('AnalyticsUploader init');
   return (event) => {
     // TODO: batch event and submit them using http
-    if (__DEBUG__) console.log(' AnalyticsEvent:', event);
+    if (__DEBUG__) console.log('AnalyticsEvent:', event);
   };
 });
 

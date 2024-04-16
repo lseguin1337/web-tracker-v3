@@ -13,7 +13,7 @@ export function producer<Out>(setup: ProducerSetup<Out>): Producer<Out> {
 }
 
 /**
- * @description Transform a Producer/Composer behavior
+ * @description Transform a Producer/Composer behavior (WARNING: this should not be used often)
  */
 export function transformer<In, Out = In>(source: Source<In>, setup: TransformerSetup<In, Out>): Transformer<In, Out> {
   return {

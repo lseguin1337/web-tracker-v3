@@ -35,10 +35,10 @@ function WebTracker(config: TagConfig) {
 
 async function bootstrap() {
   await mount(() => WebTracker({
-    recording: false,
+    recording: true,
     anonymization: true,
     textVisibility: false,
-    heatmap: true,
+    heatmap: false,
     tagVersion: 'demo'
   }));
 }

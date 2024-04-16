@@ -1,4 +1,4 @@
-import { composer, producer, transformer, useDocument, useWindow } from "../composables/use-tracking-pipeline";
+import { composer, producer, useDocument, useWindow } from "../composables/use-tracking-pipeline";
 import { SerializedEvent } from "./types";
 
 export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>((push) => {
@@ -32,13 +32,5 @@ export const TextVisibilityProducer = composer<SerializedEvent, SerializedEvent<
   let i = 0;
   return (_) => {
     if (i++ % 2) push({ type: 'textVisibility', args: [] });
-  };
-});
-
-export const DOMAnonymizerTransformer = transformer(DOMProducer, (push) => {
-  if (__DEBUG__) console.log('DOMAnonymizer init');
-  return (event) => {
-    // simple pass through
-    push(event);
   };
 });
