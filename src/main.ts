@@ -8,8 +8,9 @@ import { RecordingModule } from './modules/recording';
 
 function WebTracker(config: TagConfig) {
   if (__DEBUG__) console.time('WebTrackerInit');
-  // expose context to sub modules
+  // expose empty pipeline to sub modules
   const pipeline = createTrackingPipeline();
+  // expose tracking tag config to sub modules
   provideTrackerConfig(config);
 
   onMounted(() => {
