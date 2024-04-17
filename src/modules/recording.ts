@@ -1,12 +1,16 @@
 import { useTrackerConfig } from "../composables/use-tracker-config";
-import { composer, consumer, createPipelineContext, usePipelineContext, useTrackingPipeline } from "../composables/use-tracking-pipeline";
+import { composer, consumer, createPipelineContext, EventHook, EventOf, usePipelineContext, useTrackingPipeline } from "../composables/use-tracking-pipeline";
 import { ClickProducer, DOMProducer, InputChangeProducer, MouseMoveProducer, SerializedEvent } from "../producers";
 
 const AnonymizedContext = createPipelineContext<boolean>();
 
-const RecordedDOMProducer = composer<SerializedEvent<'initialDom' | 'mutations'>, SerializedEvent<'initialDom' | 'mutations'> & { anonymized?: boolean }>([DOMProducer], (push) => {
+type AnonymizedDOMEvent = EventOf<typeof DOMProducer> & { anonymized?: boolean };
+
+const RecordedDOMProducer = composer([DOMProducer], (push: EventHook<AnonymizedDOMEvent>) => {
   if (__DEBUG__) console.log('RecordedDOMProvider init');
-  if (!usePipelineContext(AnonymizedContext)) return push;
+  const isAnonymized = usePipelineContext(AnonymizedContext);
+  if (!isAnonymized)
+    return push;
   return (event) => {
     // TODO: anonymize event
     push({ ...event, anonymized: true });
@@ -35,6 +39,9 @@ export function RecordingModule() {
   const config = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
+  // declare a context pipeline (this will be use inside the RecordedDOMProducer)
   pipeline.define(AnonymizedContext, !!config.anonymization);
+
+  // register all producers/composers/consumer the recording module is using
   pipeline.use(...producers, RecordingUploader);
 }

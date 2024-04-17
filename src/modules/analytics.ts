@@ -19,12 +19,16 @@ const AnalyticsUploader = consumer<SerializedEvent>([
 function HeatmapModule() {
   if (__DEBUG__) console.log('HeatmapModule init');
   const pipeline = useTrackingPipeline();
+
+  // register all producers the HeatmapModule is using
   pipeline.use(ThrottledMouseMoveProducer);
 }
 
 function TextVisibilityModule() {
   if (__DEBUG__) console.log('TextVisibilityModule init');
   const pipeline = useTrackingPipeline();
+
+  // register all producers the TextVisibilityModule is using
   pipeline.use(TextVisibilityProducer);
 }
 
@@ -33,6 +37,7 @@ export function AnalyticsModule() {
   const { textVisibility, heatmap } = useTrackerConfig();
   const pipeline = useTrackingPipeline();
 
+  // register all producers/consumer the AnalyticsModule is using
   pipeline.use(ClickProducer, RageClickProducer, AnalyticsUploader);
 
   return [

@@ -61,3 +61,5 @@ export type ProducerSetup<Out> = (push: EventHook<Out>) => UnsubscribeHook;
 export type TransformerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
 export type ComposerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
 export type ConsumerSetup<In> = () => EventHook<In>;
+
+export type EventOf<T> = T extends Source<infer Out> ? Out : never;
