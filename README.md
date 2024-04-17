@@ -127,7 +127,7 @@ _If multiple modules register the same Producer / Consumers / Composer / Transfo
 
 - `Producer`: Generates events and may subscribe to document/window events.
 - `Composer`: Creates new events based on one or more Producers/Composers.
-- `Transformer`: Alters the behavior of a Producer/Composer.
+- `Transformer`: Alters the behavior of a Producer/Composer. (WARNING: Probably not needed)
 - `Consumer`: Consumes events and does not emit new ones.
 
 Look at this simple exemple
