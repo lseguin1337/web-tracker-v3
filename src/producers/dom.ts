@@ -1,5 +1,9 @@
-import { composer, producer, useDocument, useWindow } from "../composables/use-tracking-pipeline";
+import { composer, createPipelineContext, EventHook, EventOf, producer, useDocument, usePipelineContext, useWindow } from "../composables/use-tracking-pipeline";
 import { SerializedEvent } from "./types";
+
+export const RecordingDOMConfig = createPipelineContext<{ anonymized: boolean }>();
+
+type AnonymizedDOMEvent = EventOf<typeof DOMProducer> & { anonymized?: boolean };
 
 export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>((push) => {
   if (__DEBUG__)  console.log('DOMProducer init');
@@ -24,6 +28,17 @@ export const DOMProducer = producer<SerializedEvent<'initialDom' | 'mutations'>>
   return () => {
     if (__DEBUG__) console.log('DOMProducer destroyed');
     mutationObserver.disconnect();
+  };
+});
+
+export const RecordingDOMProducer = composer([DOMProducer], (push: EventHook<AnonymizedDOMEvent>) => {
+  if (__DEBUG__) console.log('RecordedDOMProvider init');
+  const config = usePipelineContext(RecordingDOMConfig);
+  if (!config.anonymized)
+    return push;
+  return (event) => {
+    // TODO: anonymize event
+    push({ ...event, anonymized: true });
   };
 });
 

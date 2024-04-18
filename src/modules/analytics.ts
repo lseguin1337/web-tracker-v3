@@ -1,7 +1,11 @@
 import { NoopModule } from "../lib";
 import { useTrackerConfig } from "../composables/use-tracker-config";
 import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
-import { ClickProducer, ThrottledMouseMoveProducer, RageClickProducer, TextVisibilityProducer, SerializedEvent } from "../producers";
+
+import { SerializedEvent } from "../producers/types";
+import { ClickProducer, ThrottledMouseMoveProducer } from "../producers/pointers";
+import { RageClickProducer } from "../producers/insights";
+import { TextVisibilityProducer } from "../producers/dom";
 
 // analytics events consumer
 function consume(push: (event: SerializedEvent) => void) {
