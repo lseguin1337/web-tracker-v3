@@ -45,6 +45,9 @@ export function consumer<In>(sources: Source<In>[], setup: ConsumerSetup<In>): C
   };
 }
 
+/**
+ * Rescheduler is a function to avoid main thread blocking
+ */
 function createRescheduler() {
   let refDate: number | null = null;
   let rescheduledTasks: (() => void)[] = [];
@@ -113,6 +116,9 @@ export function onStop(fn: () => void) {
   return current.onStop(fn);
 }
 
+/**
+ * TODO: simplify this function
+ */
 export function createPipeline() {
   const registry = new Set<PipelineInjectable>();
   const stopListeners: (() => void)[] = [];
@@ -207,7 +213,7 @@ export function createPipeline() {
 
       const output = transformers
         .filter(transformer => transformer.deps.includes(source))
-        .reduceRight((push, { setup }) => setup(dedup(push)), dedup(...next));
+        .reduceRight((push, { setup }) => dedup(setup(push)), dedup(...next));
 
       const input = source.setup(output);
       outputs.set(source, output);
