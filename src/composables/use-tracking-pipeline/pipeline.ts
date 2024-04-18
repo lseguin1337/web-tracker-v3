@@ -45,12 +45,13 @@ export function consumer<In>(sources: Source<In>[], setup: ConsumerSetup<In>): C
   };
 }
 
-function createOutputsHandler() {
+function createRescheduler() {
   let refDate: number | null = null;
   let rescheduledTasks: (() => void)[] = [];
   let countSyncHook = 0;
 
   const reschedule = () => {
+    countSyncHook = 0;
     refDate = null;
     const tasks = rescheduledTasks;
     rescheduledTasks = [];
@@ -58,7 +59,18 @@ function createOutputsHandler() {
   };
 
   return function outputHandler(...hooks: EventHook<unknown>[]) {
-    return function push(event: unknown) {
+    if (hooks.length === 1 && '_is_rescheduler' in hooks[0]) {
+      // simple optimisation to avoid rescheduling 2 times the same task
+      return hooks[0];
+    }
+
+    // optimization to avoid useless looping if there is only one item
+    const disptach = hooks.length === 1 ? hooks[0] : ((event: unknown) => {
+      for (const hook of hooks)
+        hook(event);
+    });
+
+    function push(event: unknown) {
       // handle non blocking thread
       if (refDate === null) {
         refDate = Date.now();
@@ -74,10 +86,12 @@ function createOutputsHandler() {
 
       countSyncHook++;
 
-      // forward events
-      for (const hook of hooks)
-        hook(event);
+      disptach(event);
     };
+
+    push._is_rescheduler = true;
+
+    return push as EventHook<unknown>;
   }
 }
 
@@ -146,10 +160,12 @@ export function createPipeline() {
 
   function use(...items: (Source<any> | Transformer<any, any> | Consumer<any>)[]) {
     for (const item of items) {
-      registry.add(item);
-      // auto inject dependencies
-      if (item.type === 'composer')
-        use(...item.deps);
+      if (!registry.has(item)) {
+        registry.add(item);
+        // auto inject dependencies
+        if (item.type === 'composer')
+          use(...item.deps);
+      }
     }
   }
 
@@ -159,7 +175,7 @@ export function createPipeline() {
     const sources = entries.filter(s => s.type !== 'transformer');
     const transformers = entries.filter(s => s.type === 'transformer');
 
-    const dedup = createOutputsHandler();
+    const dedup = createRescheduler();
 
     function resolve(source: Source<any> | Consumer<any>): EventHook<any> | (() => void) {
       if (inputs.has(source)) {
