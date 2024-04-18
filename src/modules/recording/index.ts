@@ -1,0 +1,1 @@
+export { RecordingModule } from './recording.module';
