@@ -25,14 +25,10 @@ const producers = [
   RecordedDOMProducer,
 ];
 
-// Recording Payloads
-const RecordingUploader = consumer<SerializedEvent>(producers, () => {
-  if (__DEBUG__) console.log('RecordingUploader init');
-  return (event) => {
-    // TODO: batch event and submit them using http
-    if (__DEBUG__) console.log('RecordingEvent:', event);
-  };
-});
+// recording events consumer
+function consume(push: EventHook<SerializedEvent>) {
+  return consumer<SerializedEvent>(producers, () => push);
+}
 
 export function RecordingModule() {
   if (__DEBUG__) console.log('RecordingModule init');
@@ -42,6 +38,12 @@ export function RecordingModule() {
   // declare a context pipeline (this will be use inside the RecordedDOMProducer)
   pipeline.define(AnonymizedContext, !!config.anonymization);
 
-  // register all producers/composers/consumer the recording module is using
-  pipeline.use(...producers, RecordingUploader);
+  // register all producers/composers the recording module is using
+  pipeline.use(...producers);
+
+  // consume recording events
+  pipeline.use(consume((event) => {
+    // TODO: batch and submit events
+    if (__DEBUG__) console.log('RecordingEvent', event);
+  }));
 }

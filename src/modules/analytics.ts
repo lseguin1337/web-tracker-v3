@@ -3,16 +3,14 @@ import { useTrackerConfig } from "../composables/use-tracker-config";
 import { consumer, useTrackingPipeline } from "../composables/use-tracking-pipeline";
 import { ClickProducer, ThrottledMouseMoveProducer, RageClickProducer, TextVisibilityProducer, SerializedEvent } from "../producers";
 
-function consumeAnalyticsEvents(push: (event: SerializedEvent) => void) {
+// analytics events consumer
+function consume(push: (event: SerializedEvent) => void) {
   return consumer<SerializedEvent>([
     ClickProducer,
     RageClickProducer,
     TextVisibilityProducer,
     ThrottledMouseMoveProducer,
-  ], () => {
-    if (__DEBUG__) console.log('AnalyticsUploader init');
-    return push;
-  });
+  ], () => push);
 }
 
 function HeatmapModule() {
@@ -37,8 +35,12 @@ export function AnalyticsModule() {
   const pipeline = useTrackingPipeline();
 
   // register all producers/consumer the AnalyticsModule is using
-  pipeline.use(ClickProducer, RageClickProducer, consumeAnalyticsEvents((event) => {
-    // 
+  pipeline.use(ClickProducer, RageClickProducer);
+
+  // consume analytics events
+  pipeline.use(consume((event) => {
+    // TODO: batch and submit events
+    if (__DEBUG__) console.log('AnalyticsEvent', event);
   }));
 
   return [
