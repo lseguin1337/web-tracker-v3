@@ -1,11 +1,23 @@
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+function devConfig() {
+  return {
+    tagVersion: 'dev',
+    anonymization: true,
+    recording: true,
+    textVisibility: true,
+    heatmap: true,
+  };
+}
+
 export default defineConfig(({ mode }) => {
+  const isDev = mode === 'development';
   return {
     define: {
-      __DEV__: mode === 'development',
+      __DEV__: isDev,
       __DEBUG__: process.env.NODE_ENV === 'debug',
+      ...(isDev ? { CS_CONF: JSON.stringify(devConfig()) } : {}),
     },
     plugins: [tsconfigPaths()],
     build: {

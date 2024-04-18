@@ -34,13 +34,7 @@ function WebTracker(config: TagConfig) {
 }
 
 async function bootstrap() {
-  await mount(() => WebTracker({
-    recording: true,
-    anonymization: true,
-    textVisibility: false,
-    heatmap: false,
-    tagVersion: 'demo'
-  }));
+  await mount(() => WebTracker(CS_CONF));
 }
 
 bootstrap();
