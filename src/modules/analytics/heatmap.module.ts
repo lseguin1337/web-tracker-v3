@@ -1,5 +1,5 @@
-import { useTrackingPipeline } from "../../composables/use-tracking-pipeline";
-import { ThrottledMouseMoveProducer } from "../../producers/pointers";
+import { useTrackingPipeline } from "@/composables/use-tracking-pipeline";
+import { ThrottledMouseMoveProducer } from "@/producers/pointers";
 
 export const heatmapProducers = [
   ThrottledMouseMoveProducer,

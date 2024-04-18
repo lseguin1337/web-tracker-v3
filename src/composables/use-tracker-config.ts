@@ -1,4 +1,4 @@
-import { createContext, inject, provide } from "../lib";
+import { createContext, inject, provide } from "@/lib";
 
 export interface TagConfig {
   tagVersion: string;

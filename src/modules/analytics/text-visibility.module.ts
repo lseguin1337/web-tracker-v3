@@ -1,5 +1,5 @@
-import { useTrackingPipeline } from "../../composables/use-tracking-pipeline";
-import { TextVisibilityProducer } from "../../producers/dom";
+import { useTrackingPipeline } from "@/composables/use-tracking-pipeline";
+import { TextVisibilityProducer } from "@/producers/dom";
 
 export const textVisibilityProducers = [
   TextVisibilityProducer,

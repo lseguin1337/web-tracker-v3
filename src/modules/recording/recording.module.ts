@@ -1,10 +1,10 @@
-import { useTrackerConfig } from "../../composables/use-tracker-config";
-import { consumer, EventHook, useTrackingPipeline } from "../../composables/use-tracking-pipeline";
+import { useTrackerConfig } from "@/composables/use-tracker-config";
+import { consumer, EventHook, useTrackingPipeline } from "@/composables/use-tracking-pipeline";
 
-import { RecordingDOMConfig, RecordingDOMProducer } from "../../producers/dom";
-import { InputChangeProducer } from "../../producers/inputs";
-import { ClickProducer, MouseMoveProducer } from "../../producers/pointers";
-import { SerializedEvent } from "../../producers/types";
+import { RecordingDOMConfig, RecordingDOMProducer } from "@/producers/dom";
+import { InputChangeProducer } from "@/producers/inputs";
+import { ClickProducer, MouseMoveProducer } from "@/producers/pointers";
+import { SerializedEvent } from "@/producers/types";
 
 // All producers used by the SR Module
 const recordingProducers = [

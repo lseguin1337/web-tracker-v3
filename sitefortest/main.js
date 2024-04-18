@@ -1,5 +1,4 @@
-import { createElement as h, useState, StrictMode } from 'https://esm.sh/react@18.2.0';
-import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+import { useState, StrictMode, createRoot, h } from './react';
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);

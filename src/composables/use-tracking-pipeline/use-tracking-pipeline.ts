@@ -1,4 +1,4 @@
-import { createContext, inject, provide } from "../../lib";
+import { createContext, inject, provide } from "@/lib";
 import { createPipeline, createPipelineContext, usePipelineContext } from './pipeline';
 import { PipelineOptions, TrackingPipeline } from "./types";
 

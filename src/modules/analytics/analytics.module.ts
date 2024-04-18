@@ -1,10 +1,11 @@
-import { NoopModule } from "../../lib";
-import { useTrackerConfig } from "../../composables/use-tracker-config";
-import { consumer, useTrackingPipeline } from "../../composables/use-tracking-pipeline";
+import { NoopModule } from "@/lib";
+import { useTrackerConfig } from "@/composables/use-tracker-config";
+import { consumer, useTrackingPipeline } from "@/composables/use-tracking-pipeline";
 
-import { SerializedEvent } from "../../producers/types";
-import { ClickProducer } from "../../producers/pointers";
-import { RageClickProducer } from "../../producers/insights";
+import { SerializedEvent } from "@/producers/types";
+import { ClickProducer } from "@/producers/pointers";
+import { RageClickProducer } from "@/producers/insights";
+
 import { HeatmapModule, heatmapProducers } from "./heatmap.module";
 import { TextVisibilityModule, textVisibilityProducers } from "./text-visibility.module";
 

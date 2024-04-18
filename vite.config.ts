@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode }) => {
   return {
@@ -6,6 +7,7 @@ export default defineConfig(({ mode }) => {
       __DEV__: mode === 'development',
       __DEBUG__: process.env.NODE_ENV === 'debug',
     },
+    plugins: [tsconfigPaths()],
     build: {
       modulePreload: false,
       rollupOptions: {
