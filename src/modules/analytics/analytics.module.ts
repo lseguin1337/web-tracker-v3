@@ -1,44 +1,41 @@
 import { NoopModule } from "@/lib";
 import { useTrackerConfig } from "@/composables/use-tracker-config";
-import { consumer, useTrackingPipeline } from "@/composables/use-tracking-pipeline";
+import { EventHook, useTrackingPipeline } from "@/composables/use-tracking-pipeline";
 
 import { SerializedEvent } from "@/producers/types";
 import { ClickProducer } from "@/producers/pointers";
 import { RageClickProducer } from "@/producers/insights";
 
-import { HeatmapModule, heatmapProducers } from "./heatmap.module";
-import { TextVisibilityModule, textVisibilityProducers } from "./text-visibility.module";
+import { HeatmapModule } from "./heatmap.module";
+import { TextVisibilityModule } from "./text-visibility.module";
 
-const analyticsProducers = [
-  ClickProducer,
-  RageClickProducer,
-];
+// reusable analytics module not couple to the tracking tag state
+function BaseAnalyticsModule({ textVisibility, heatmap, emit }: { textVisibility?: boolean, heatmap?: boolean, emit: EventHook<SerializedEvent> }) {
+  const pipeline = useTrackingPipeline();
 
-// analytics events consumer
-function consume(push: (event: SerializedEvent) => void) {
-  return consumer<SerializedEvent>([
-    ...analyticsProducers,
-    ...heatmapProducers,
-    ...textVisibilityProducers,
-  ], () => push);
+  // register analytics consumer
+  pipeline.use([
+    ClickProducer,
+    RageClickProducer,
+  ], emit);
+
+  return [
+    textVisibility ? () => TextVisibilityModule(emit) : NoopModule,
+    heatmap ? () => HeatmapModule(emit) : NoopModule,
+  ];
 }
 
+// connector between the config and the module
 export function AnalyticsModule() {
   if (__DEBUG__) console.log('AnalyticsModule init');
   const { textVisibility, heatmap } = useTrackerConfig();
-  const pipeline = useTrackingPipeline();
 
-  // register all producers used by AnalyticsModule
-  pipeline.use(...analyticsProducers);
-
-  // consume analytics events
-  pipeline.use(consume((event) => {
-    // TODO: batch and submit events
-    if (__DEBUG__) console.log('AnalyticsEvent', event);
-  }));
+  const emit = (event: SerializedEvent) => {
+    // TODO: batch event and emit them through the http
+    console.log('AnalyticsEvent:', event);
+  };
 
   return [
-    textVisibility ? TextVisibilityModule : NoopModule,
-    heatmap ? HeatmapModule : NoopModule,
+    () => BaseAnalyticsModule({ textVisibility, heatmap, emit }),
   ];
 }

@@ -119,15 +119,14 @@ app.destroy(); // destroy app
 ```
 
 ### Pipeline
-The Tracking Pipeline is very close to the flashpoint approach, it introduces new concepts to make the system more powerful, such as deferred registration of producers to split features by modules, and introduces roles like `Producers`, `Composers`, `Transformers`, and `Consumers`.
+The Tracking Pipeline is very close to the flashpoint approach, it introduces new concepts to make the system more powerful, such as deferred registration of producers to split features by modules, and introduces roles like `Producers`, `Composers`, and `Consumers`.
 
-_If multiple modules register the same Producer / Consumers / Composer / Transformer the element will be instanciated only once. This is what allow spliting the codebase by module without having to couple unrelated feature together._
+_If multiple modules register the same Producer / Consumers / Composer the element will be instanciated only once. This is what allow spliting the codebase by module without having to couple unrelated feature together._
 
 #### Pipeline Components:
 
 - `Producer`: Generates events and may subscribe to document/window events.
 - `Composer`: Creates new events based on one or more Producers/Composers.
-- `Transformer`: Alters the behavior of a Producer/Composer. (WARNING: Probably not needed)
 - `Consumer`: Consumes events and does not emit new ones.
 
 Look at this simple exemple
@@ -164,21 +163,16 @@ const RageClickProducer = composer<ClickEvent, RageClickEvent>([ClickProducer], 
   };
 });
 
-const RequestBatcher = consumer([ClickProducer, RageClickProducer], () => {
-  let batch: AnyEvent[] = [];
-  return (event: AnyEvent) => {
-    batch.push(event);
-    if (batch.length === 10) {
-      fetch('/payload', { method: 'POST', data: batch });
-      batch = [];
-    }
-  };
-});
-
 const pipeline = createPipeline();
 
-// register ClickProducer, RageClickProducer and RequestBatcher consumer
-pipeline.use(ClickProducer, RageClickProducer, RequestBatcher);
+let batch = [];
+pipeline.use([ClickProducer, RageClickProducer], (event) => {
+  batch.push(event);
+  if (batch.length === 10) {
+    fetch('/payload', { method: 'POST', data: batch });
+    batch = [];
+  }
+});
 
 // start the pipeline
 pipeline.start();

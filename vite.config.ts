@@ -2,12 +2,14 @@ import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 function devConfig() {
+  const conf = JSON.parse(process.env.CS_CONF || '{}');
   return {
     tagVersion: 'dev',
     anonymization: true,
     recording: true,
     textVisibility: true,
     heatmap: true,
+    ...conf,
   };
 }
 

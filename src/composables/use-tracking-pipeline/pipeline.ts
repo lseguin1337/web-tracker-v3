@@ -1,4 +1,4 @@
-import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, Transformer, TransformerSetup, UnsubscribeHook, PipelineContextKey } from "./types";
+import { EventHook, PipelineContext, Composer, ComposerSetup, Consumer, ConsumerSetup, PipelineInjectable, Producer, ProducerSetup, Source, UnsubscribeHook, PipelineContextKey } from "./types";
 
 let current: PipelineContext | null = null;
 
@@ -8,17 +8,6 @@ let current: PipelineContext | null = null;
 export function producer<Out>(setup: ProducerSetup<Out>): Producer<Out> {
   return {
     type: 'producer',
-    setup,
-  };
-}
-
-/**
- * @description Transform a Producer/Composer behavior (WARNING: this should not be used often)
- */
-export function transformer<In, Out = In>(source: Source<In>, setup: TransformerSetup<In, Out>): Transformer<In, Out> {
-  return {
-    type: 'transformer',
-    deps: [source],
     setup,
   };
 }
@@ -164,22 +153,25 @@ export function createPipeline() {
     };
   }
 
-  function use(...items: (Source<any> | Transformer<any, any> | Consumer<any>)[]) {
+  function internalUse(...items: (Source<any> | Consumer<any>)[]) {
     for (const item of items) {
       if (!registry.has(item)) {
         registry.add(item);
         // auto inject dependencies
-        if (item.type === 'composer')
-          use(...item.deps);
+        if (item.type === 'composer' || item.type === 'consumer')
+          internalUse(...item.deps);
       }
     }
+  }
+
+  function use<T>(items: Source<T>[], emit: EventHook<T>) {
+    internalUse(consumer(items, () => emit));
   }
 
   function start() {
     if (started) throwAlreadyStarted();
     const entries = Array.from(registry);
-    const sources = entries.filter(s => s.type !== 'transformer');
-    const transformers = entries.filter(s => s.type === 'transformer');
+    const sources = entries;
 
     const dedup = createRescheduler();
 
@@ -211,9 +203,7 @@ export function createPipeline() {
         throw new Error('No consumer');
       }
 
-      const output = transformers
-        .filter(transformer => transformer.deps.includes(source))
-        .reduceRight((push, { setup }) => dedup(setup(push)), dedup(...next));
+      const output = dedup(...next);
 
       const input = source.setup(output);
       outputs.set(source, output);

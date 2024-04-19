@@ -18,7 +18,7 @@ export interface TrackingPipeline {
   /**
    * @description Register producers into the tracking pipeline
    */
-  use: (...producers: PipelineInjectable[]) => void;
+  use: <T>(producers: Source<T>[], emit: EventHook<T>) => void;
 
   /**
    * @description Supsend producer activity
@@ -36,12 +36,6 @@ export interface Producer<Out> {
   setup: ProducerSetup<Out>;
 }
 
-export interface Transformer<In, Out> {
-  type: 'transformer';
-  deps: Source<In>[];
-  setup: TransformerSetup<In, Out>
-}
-
 export interface Composer<In, Out> {
   type: 'composer';
   deps: Source<In>[];
@@ -55,10 +49,9 @@ export interface Consumer<In> {
 }
 
 export type Source<Out = unknown> = Producer<Out> | Composer<any, Out>;
-export type PipelineInjectable = Producer<any> | Composer<any, any> | Transformer<any, any> | Consumer<any>;
+export type PipelineInjectable = Producer<any> | Composer<any, any> | Consumer<any>;
 
 export type ProducerSetup<Out> = (push: EventHook<Out>) => UnsubscribeHook;
-export type TransformerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
 export type ComposerSetup<In, Out> = (push: EventHook<Out>) => EventHook<In>;
 export type ConsumerSetup<In> = () => EventHook<In>;
 

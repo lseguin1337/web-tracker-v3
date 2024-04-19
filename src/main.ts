@@ -17,6 +17,7 @@ function WebTracker(config: TagConfig) {
     // call when all sub module are mounted...
     if (__DEBUG__) console.log('Pipeline starting...');
     pipeline.start();
+
     // to measure the time to load the tag
     if (__DEBUG__) console.timeEnd('WebTrackerInit');
   });
@@ -33,8 +34,8 @@ function WebTracker(config: TagConfig) {
   ];
 }
 
-async function bootstrap() {
-  await mount(() => WebTracker(CS_CONF));
+function bootstrap() {
+  mount(() => WebTracker(CS_CONF));
 }
 
 bootstrap();
