@@ -8,6 +8,7 @@ import { RageClickProducer } from "@/producers/insights";
 
 import { HeatmapModule } from "./heatmap.module";
 import { TextVisibilityModule } from "./text-visibility.module";
+import { useAnalyticsDispatcher } from "./use-analytics-dispatcher";
 
 // reusable analytics module not couple to the tracking tag state
 function BaseAnalyticsModule({ textVisibility, heatmap, emit }: { textVisibility?: boolean, heatmap?: boolean, emit: EventHook<SerializedEvent> }) {
@@ -29,11 +30,7 @@ function BaseAnalyticsModule({ textVisibility, heatmap, emit }: { textVisibility
 export function AnalyticsModule() {
   if (__DEBUG__) console.log('AnalyticsModule init');
   const { textVisibility, heatmap } = useTrackerConfig();
-
-  const emit = (event: SerializedEvent) => {
-    // TODO: batch event and emit them through the http
-    console.log('AnalyticsEvent:', event);
-  };
+  const emit = useAnalyticsDispatcher();
 
   return [
     () => BaseAnalyticsModule({ textVisibility, heatmap, emit }),

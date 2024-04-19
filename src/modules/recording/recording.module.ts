@@ -5,6 +5,7 @@ import { RecordingDOMConfig, RecordingDOMProducer } from "@/producers/dom";
 import { InputChangeProducer } from "@/producers/inputs";
 import { ClickProducer, MouseMoveProducer } from "@/producers/pointers";
 import { SerializedEvent } from "@/producers/types";
+import { useRecordingDispatcher } from "./use-recording-dispatcher";
 
 function BaseRecordingModule({ anonymized, emit }: { anonymized?: boolean, emit: EventHook<SerializedEvent> }) {
   const pipeline = useTrackingPipeline();
@@ -24,11 +25,7 @@ function BaseRecordingModule({ anonymized, emit }: { anonymized?: boolean, emit:
 export function RecordingModule() {
   if (__DEBUG__) console.log('RecordingModule init');
   const config = useTrackerConfig();
-
-  const emit = (event: SerializedEvent) => {
-    // TODO: batch event and emit them through the http
-    console.log('RecordingEvent:', event);
-  };
+  const emit = useRecordingDispatcher();
 
   return [
     () => BaseRecordingModule({ anonymized: !!config.anonymization, emit }),

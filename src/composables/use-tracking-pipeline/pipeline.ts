@@ -194,7 +194,7 @@ export function createPipeline() {
         } catch {
           return null;
         }
-      }).filter(instance => !!instance);
+      }).filter(instance => !!instance) as EventHook<any>[];
 
       if (next.length === 0) {
         console.warn('No consumer found for', source);
