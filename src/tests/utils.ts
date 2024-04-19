@@ -1,5 +1,7 @@
+import { provideTrackerConfig, TagConfig } from "@/composables/use-tracker-config";
 import { createTrackingPipeline, EventHook, Source } from "@/composables/use-tracking-pipeline";
 import { createPipeline } from "@/composables/use-tracking-pipeline/pipeline";
+import { contextHelper } from "@/lib/testing";
 
 // mock the pipeline
 jest.mock('@/composables/use-tracking-pipeline/pipeline');
@@ -13,7 +15,7 @@ export function setupFakePipeline(win = window) {
     suspend: jest.fn(),
     use: jest.fn(),
   };
-  jest.mocked(createPipeline).mockReturnValue(pipeline);
+  jest.mocked(createPipeline).mockReturnValueOnce(pipeline);
   createTrackingPipeline({ window: win });
 
   const resolve = <T>(producer: Source<T>) => {
@@ -35,3 +37,9 @@ export function setupFakePipeline(win = window) {
   };
 }
 
+export function fakeTrackingTagContext(config: Partial<TagConfig> = {}) {
+  return contextHelper(() => {
+    provideTrackerConfig({ tagVersion: 'test', ...config });
+    return setupFakePipeline();
+  });
+}
