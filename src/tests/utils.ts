@@ -1,25 +1,26 @@
 import { provideTrackerConfig, TagConfig } from "@/composables/use-tracker-config";
 import { createTrackingPipeline, EventHook, Source } from "@/composables/use-tracking-pipeline";
-import { createPipeline } from "@/composables/use-tracking-pipeline/pipeline";
+import * as Pipeline from "@/composables/use-tracking-pipeline/pipeline";
 import { contextHelper } from "@/lib/testing";
 
-// mock the pipeline
-jest.mock('@/composables/use-tracking-pipeline/pipeline');
+const originalCreatePipeline = Pipeline.createPipeline;
 
 // this can be moved into the utils
-export function setupFakePipeline(win = window) {
-  const pipeline = {
-    start: jest.fn(),
-    stop: jest.fn(),
-    define: jest.fn(),
-    suspend: jest.fn(),
-    use: jest.fn(),
-  };
-  jest.mocked(createPipeline).mockReturnValueOnce(pipeline);
+export function setupPipeline(win = window) {
+  const pipeline = originalCreatePipeline();
+
+  jest.spyOn(pipeline, 'define');
+  jest.spyOn(pipeline, 'start');
+  jest.spyOn(pipeline, 'stop');
+  jest.spyOn(pipeline, 'suspend');
+  jest.spyOn(pipeline, 'use');
+
+  jest.spyOn(Pipeline, 'createPipeline').mockReturnValueOnce(pipeline);
+
   createTrackingPipeline({ window: win });
 
   const resolve = <T>(producer: Source<T>) => {
-    return pipeline.use.mock.calls.filter((args) => args[0].includes(producer)).map(args => args[1] as EventHook<T>);
+    return jest.mocked(pipeline.use).mock.calls.filter((args) => args[0].includes(producer)).map(args => args[1] as EventHook<T>);
   };
 
   return {
@@ -40,6 +41,6 @@ export function setupFakePipeline(win = window) {
 export function fakeTrackingTagContext(config: Partial<TagConfig> = {}) {
   return contextHelper(() => {
     provideTrackerConfig({ tagVersion: 'test', ...config });
-    return setupFakePipeline();
+    return setupPipeline();
   });
 }
