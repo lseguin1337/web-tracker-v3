@@ -5,7 +5,6 @@ import { contextHelper } from "@/lib/testing";
 
 const originalCreatePipeline = Pipeline.createPipeline;
 
-// this can be moved into the utils
 export function setupPipeline(win = window) {
   const pipeline = originalCreatePipeline();
 
@@ -25,7 +24,7 @@ export function setupPipeline(win = window) {
 
   return {
     pipeline,
-    hasProducerRegistered(producer: Source<any>) {
+    isRegistered(producer: Source<any>) {
       return resolve(producer).length > 0;
     },
     fakeDispatcher<T>(producer: Source<T>) {
@@ -38,7 +37,7 @@ export function setupPipeline(win = window) {
   };
 }
 
-export function fakeTrackingTagContext(config: Partial<TagConfig> = {}) {
+export function fakeTrackerContext(config: Partial<TagConfig> = {}) {
   return contextHelper(() => {
     provideTrackerConfig({ tagVersion: 'test', ...config });
     return setupPipeline();
