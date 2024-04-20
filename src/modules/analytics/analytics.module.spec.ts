@@ -22,10 +22,18 @@ describe('Analytics', () => {
     afterEach(() => noFeatureCtx.$destroy());
 
     it('should not register heatmap and textVisibility', () => {
-      expect(noFeatureCtx.isRegistered(ThrottledMouseMoveProducer)).toBe(false);
-      expect(noFeatureCtx.isRegistered(TextVisibilityProducer)).toBe(false);
-      noFeatureCtx.fakeDispatcher(ClickProducer)({ type: 'click', args: [] });
-      expect(eventDisptacher).toHaveBeenCalledWith({ type: 'click', args: [] });
+      const clickProducer = noFeatureCtx.mockProducer(ClickProducer);
+      const textVisibilityProducer = noFeatureCtx.mockProducer(TextVisibilityProducer);
+      const moveProducer = noFeatureCtx.mockProducer(ThrottledMouseMoveProducer);
+
+      noFeatureCtx.start();
+
+      expect(clickProducer.isUsed).toBe(true);
+      expect(textVisibilityProducer.isUsed).toBe(false);
+      expect(moveProducer.isUsed).toBe(false);
+
+      clickProducer.emit({ type: 'click', args: [{ timeStamp: 12 }] });
+      expect(eventDisptacher).toHaveBeenCalledWith({ type: 'click', args: [{ timeStamp: 12 }] });
     });
   });
 
@@ -34,9 +42,17 @@ describe('Analytics', () => {
     afterEach(() => heatmapCtx.$destroy());
 
     it('should register heatmap only', () => {
-      expect(heatmapCtx.isRegistered(ThrottledMouseMoveProducer)).toBe(true);
-      expect(heatmapCtx.isRegistered(TextVisibilityProducer)).toBe(false);
-      heatmapCtx.fakeDispatcher(ThrottledMouseMoveProducer)({ type: 'mousemove', args: [] });
+      const clickProducer = heatmapCtx.mockProducer(ClickProducer);
+      const textVisibilityProducer = heatmapCtx.mockProducer(TextVisibilityProducer);
+      const moveProducer = heatmapCtx.mockProducer(ThrottledMouseMoveProducer);
+
+      heatmapCtx.start();
+
+      expect(clickProducer.isUsed).toBe(true);
+      expect(textVisibilityProducer.isUsed).toBe(false);
+      expect(moveProducer.isUsed).toBe(true);
+
+      moveProducer.emit({ type: 'mousemove', args: [] });
       expect(eventDisptacher).toHaveBeenCalledWith({ type: 'mousemove', args: [] });
     });
   });
@@ -45,10 +61,18 @@ describe('Analytics', () => {
     beforeEach(() => textVisibilityCtx.$mount(AnalyticsModule));
     afterEach(() => textVisibilityCtx.$destroy());
 
-    it('should register textVisibility only', () => {
-      expect(textVisibilityCtx.isRegistered(ThrottledMouseMoveProducer)).toBe(false);
-      expect(textVisibilityCtx.isRegistered(TextVisibilityProducer)).toBe(true);
-      textVisibilityCtx.fakeDispatcher(TextVisibilityProducer)({ type: 'textVisibility', args: [] });
+    it('should register heatmap only', () => {
+      const clickProducer = textVisibilityCtx.mockProducer(ClickProducer);
+      const textVisibilityProducer = textVisibilityCtx.mockProducer(TextVisibilityProducer);
+      const moveProducer = textVisibilityCtx.mockProducer(ThrottledMouseMoveProducer);
+
+      textVisibilityCtx.start();
+
+      expect(clickProducer.isUsed).toBe(true);
+      expect(textVisibilityProducer.isUsed).toBe(true);
+      expect(moveProducer.isUsed).toBe(false);
+
+      textVisibilityProducer.emit({ type: 'textVisibility', args: [] });
       expect(eventDisptacher).toHaveBeenCalledWith({ type: 'textVisibility', args: [] });
     });
   });

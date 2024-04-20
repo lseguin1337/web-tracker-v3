@@ -21,22 +21,30 @@ describe('RecordingModule', () => {
   });
 
   it('should register MouseMoveProducer and forward event to the dispatcher', () => {
-    ctx.fakeDispatcher(MouseMoveProducer)({ type: 'mousemove', args: [] });
+    const move = ctx.mockProducer(MouseMoveProducer);
+    ctx.start();
+    move.emit({ type: 'mousemove', args: [] })
     expect(eventDisptacher).toHaveBeenCalledWith({ type: 'mousemove', args: [] });
   });
 
   it('should register RecordingDOMProducer and forward event to the dispatcher', () => {
-    ctx.fakeDispatcher(RecordingDOMProducer)({ type: 'initialDom', args: [{ blbal: '' }] });
+    const dom = ctx.mockProducer(RecordingDOMProducer);
+    ctx.start();
+    dom.emit({ type: 'initialDom', args: [{ blbal: '' }] });
     expect(eventDisptacher).toHaveBeenCalledWith({ type: 'initialDom', args: [{ blbal: '' }] });
   });
 
   it('should register ClickProducer and forward event to the dispatcher', () => {
-    ctx.fakeDispatcher(ClickProducer)({ type: 'click', args: [] });
+    const click = ctx.mockProducer(ClickProducer);
+    ctx.start();
+    click.emit({ type: 'click', args: [] });
     expect(eventDisptacher).toHaveBeenCalledWith({ type: 'click', args: [] });
   });
 
   it('should register InputChangeProducer and forward event to the dispatcher', () => {
-    ctx.fakeDispatcher(InputChangeProducer)({ type: 'change', args: [] });
+    const input = ctx.mockProducer(InputChangeProducer);
+    ctx.start();
+    input.emit({ type: 'change', args: [] });
     expect(eventDisptacher).toHaveBeenCalledWith({ type: 'change', args: [] });
   });
 });
