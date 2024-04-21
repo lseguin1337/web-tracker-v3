@@ -26,7 +26,7 @@ describe('Analytics', () => {
       const textVisibilityProducer = noFeatureCtx.mockProducer(TextVisibilityProducer);
       const moveProducer = noFeatureCtx.mockProducer(ThrottledMouseMoveProducer);
 
-      noFeatureCtx.start();
+      noFeatureCtx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(false);
@@ -46,7 +46,7 @@ describe('Analytics', () => {
       const textVisibilityProducer = heatmapCtx.mockProducer(TextVisibilityProducer);
       const moveProducer = heatmapCtx.mockProducer(ThrottledMouseMoveProducer);
 
-      heatmapCtx.start();
+      heatmapCtx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(false);
@@ -66,7 +66,7 @@ describe('Analytics', () => {
       const textVisibilityProducer = textVisibilityCtx.mockProducer(TextVisibilityProducer);
       const moveProducer = textVisibilityCtx.mockProducer(ThrottledMouseMoveProducer);
 
-      textVisibilityCtx.start();
+      textVisibilityCtx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(true);

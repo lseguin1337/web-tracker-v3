@@ -38,7 +38,6 @@ export function setupPipeline(win = window) {
   const stop = once(() => pipeline.stop());
 
   return {
-    pipeline,
     mockProducer<T>(producer: Source<T>) {
       let push: EventHook<T>;
       const input = jest.fn();
@@ -59,11 +58,11 @@ export function setupPipeline(win = window) {
         input,
       };
     },
-    start() {
+    startPipeline() {
       pipeline.start();
       destroy.push(stop);
     },
-    stop,
+    stopPipeline: stop,
   };
 }
 
