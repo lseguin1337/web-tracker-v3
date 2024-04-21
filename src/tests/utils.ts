@@ -15,7 +15,7 @@ function once(fn: () => void) {
   };
 }
 
-export function setupPipeline(win = window) {
+export function setupMockPipeline(win = window) {
   const pipeline = originalCreatePipeline();
 
   jest.spyOn(pipeline, 'define');
@@ -52,7 +52,7 @@ export function setupPipeline(win = window) {
           return !!push;
         },
         get emit() {
-          if (!push) throw new Error('Pipeline not started');
+          if (!push) throw new Error('Producer not used or pipeline not started');
           return push;
         },
         input,
@@ -69,6 +69,6 @@ export function setupPipeline(win = window) {
 export function fakeTrackerContext(config: Partial<TagConfig> = {}, win = window) {
   return contextHelper(() => {
     provideTrackerConfig({ tagVersion: 'test', ...config });
-    return setupPipeline(win);
+    return setupMockPipeline(win);
   });
 }
