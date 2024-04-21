@@ -5,7 +5,7 @@ import { AnalyticsModule } from "./analytics.module";
 
 const eventDisptacher = jest.fn();
 
-// mock the recording dispatcher
+// mock the analytics dispatcher
 jest.mock('./use-analytics-dispatcher', () => ({
   useAnalyticsDispatcher: jest.fn().mockImplementation(() => eventDisptacher),
 }));
@@ -63,7 +63,7 @@ describe('Analytics', () => {
     beforeEach(() => ctx.$mount(AnalyticsModule));
     afterEach(() => ctx.$destroy());
 
-    it('should register heatmap only', () => {
+    it('should register textVisibility only', () => {
       const clickProducer = ctx.mockProducer(ClickProducer);
       const textVisibilityProducer = ctx.mockProducer(TextVisibilityProducer);
       const moveProducer = ctx.mockProducer(ThrottledMouseMoveProducer);
