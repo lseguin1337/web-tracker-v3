@@ -9,7 +9,10 @@ export function contextHelper<T extends Record<string, unknown>>(setup: () => T)
   let providers: T | undefined;
   let instance: ModuleInstance | undefined;
 
-  const ctrl = {
+  const ctx = {
+    /**
+     * @description mount modules and use the setup function
+     */
     $mount: async (...modules: ModuleFn[]) => {
       if (isUsed) throw new Error('count be mounted twice');
       isUsed = true;
@@ -19,13 +22,19 @@ export function contextHelper<T extends Record<string, unknown>>(setup: () => T)
       });
       return instance;
     },
+    /**
+     * @description destroy the module previously mounted
+     */
     $destroy: () => {
       isUsed = false;
       instance?.destroy();
       providers = undefined;
       instance = undefined;
     },
-    $chain: <U extends Record<string, unknown>>(secondSetup: () => U) => {
+    /**
+     * @description derive the context to extend it
+     */
+    $: <U extends Record<string, unknown>>(secondSetup: () => U) => {
       return contextHelper(() => {
         return {
           ...setup(),
@@ -35,14 +44,14 @@ export function contextHelper<T extends Record<string, unknown>>(setup: () => T)
     },
   };
 
-  return new Proxy(ctrl, {
+  return new Proxy(ctx, {
     get(target, key) {
       if (key === '$mount') return target[key];
-      if (key === '$chain') return target[key];
+      if (key === '$') return target[key];
       if (!instance) throw new Error('module not mounted');
       if (key === '$destroy') return target[key];
       if (key === '$instance') return instance;
       return (providers as any)[key];
     }
-  }) as unknown as T & typeof ctrl;
+  }) as unknown as T & typeof ctx;
 }
