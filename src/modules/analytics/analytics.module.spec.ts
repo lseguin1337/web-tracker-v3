@@ -10,23 +10,21 @@ jest.mock('./use-analytics-dispatcher', () => ({
   useAnalyticsDispatcher: jest.fn().mockImplementation(() => eventDisptacher),
 }));
 
-const noFeatureCtx = fakeTrackerContext({ heatmap: false, textVisibility: false });
-const heatmapCtx = fakeTrackerContext({ heatmap: true });
-const textVisibilityCtx = fakeTrackerContext({ textVisibility: true });
-
 describe('Analytics', () => {
   afterEach(() => eventDisptacher.mockClear());
 
   describe('Without Feature', () => {
-    beforeEach(() => noFeatureCtx.$mount(AnalyticsModule));
-    afterEach(() => noFeatureCtx.$destroy());
+    const ctx = fakeTrackerContext({ heatmap: false, textVisibility: false });
+
+    beforeEach(() => ctx.$mount(AnalyticsModule));
+    afterEach(() => ctx.$destroy());
 
     it('should not register heatmap and textVisibility', () => {
-      const clickProducer = noFeatureCtx.mockProducer(ClickProducer);
-      const textVisibilityProducer = noFeatureCtx.mockProducer(TextVisibilityProducer);
-      const moveProducer = noFeatureCtx.mockProducer(ThrottledMouseMoveProducer);
+      const clickProducer = ctx.mockProducer(ClickProducer);
+      const textVisibilityProducer = ctx.mockProducer(TextVisibilityProducer);
+      const moveProducer = ctx.mockProducer(ThrottledMouseMoveProducer);
 
-      noFeatureCtx.startPipeline();
+      ctx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(false);
@@ -38,15 +36,17 @@ describe('Analytics', () => {
   });
 
   describe('With heatmap', () => {
-    beforeEach(() => heatmapCtx.$mount(AnalyticsModule));
-    afterEach(() => heatmapCtx.$destroy());
+    const ctx = fakeTrackerContext({ heatmap: true });
+
+    beforeEach(() => ctx.$mount(AnalyticsModule));
+    afterEach(() => ctx.$destroy());
 
     it('should register heatmap only', () => {
-      const clickProducer = heatmapCtx.mockProducer(ClickProducer);
-      const textVisibilityProducer = heatmapCtx.mockProducer(TextVisibilityProducer);
-      const moveProducer = heatmapCtx.mockProducer(ThrottledMouseMoveProducer);
+      const clickProducer = ctx.mockProducer(ClickProducer);
+      const textVisibilityProducer = ctx.mockProducer(TextVisibilityProducer);
+      const moveProducer = ctx.mockProducer(ThrottledMouseMoveProducer);
 
-      heatmapCtx.startPipeline();
+      ctx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(false);
@@ -58,15 +58,17 @@ describe('Analytics', () => {
   });
 
   describe('With textVisibility', () => {
-    beforeEach(() => textVisibilityCtx.$mount(AnalyticsModule));
-    afterEach(() => textVisibilityCtx.$destroy());
+    const ctx = fakeTrackerContext({ textVisibility: true });
+
+    beforeEach(() => ctx.$mount(AnalyticsModule));
+    afterEach(() => ctx.$destroy());
 
     it('should register heatmap only', () => {
-      const clickProducer = textVisibilityCtx.mockProducer(ClickProducer);
-      const textVisibilityProducer = textVisibilityCtx.mockProducer(TextVisibilityProducer);
-      const moveProducer = textVisibilityCtx.mockProducer(ThrottledMouseMoveProducer);
+      const clickProducer = ctx.mockProducer(ClickProducer);
+      const textVisibilityProducer = ctx.mockProducer(TextVisibilityProducer);
+      const moveProducer = ctx.mockProducer(ThrottledMouseMoveProducer);
 
-      textVisibilityCtx.startPipeline();
+      ctx.startPipeline();
 
       expect(clickProducer.isUsed).toBe(true);
       expect(textVisibilityProducer.isUsed).toBe(true);
