@@ -59,7 +59,7 @@ const ChildModule = () => {
   console.log(counter);
 };
 
-const RootModule = () => {
+const AppModule = () => {
   // expose context to sub module
   provide(CounterContext, { counter: 10 });
 
@@ -69,7 +69,7 @@ const RootModule = () => {
   ];
 };
 
-mount(RootModule); // mount the app
+mount(AppModule); // mount the app
 ```
 
 Keep in mind you can pass some informations to a child module using arguments it's not manadatory to use the context.
@@ -82,7 +82,7 @@ const ChildModule = ({ counter }: { counter: number }) => {
   console.log(counter);
 };
 
-const RootModule = () => {
+const AppModule = () => {
   const counterCtx = { counter: 10 };
   return [
     () => ChildModule(counterCtx), // pass the counter context
@@ -90,7 +90,7 @@ const RootModule = () => {
   ];
 };
 
-mount(RootModule); // mount the app
+mount(AppModule); // mount the app
 ```
 
 ### Module Hooks
@@ -100,7 +100,7 @@ Module hooks are functions that manage the lifecycle of modules in the applicati
 ```typescript
 import { onMounted, onDestroy, mount } from './lib';
 
-const RootModule = () => {
+const AppModule = () => {
   onMounted(() => {
     // call when all sub module are mounted
   });
@@ -114,7 +114,7 @@ const RootModule = () => {
   ];
 };
 
-const app = await mount(RootModule); // mount the app
+const app = mount(AppModule); // mount the app
 app.destroy(); // destroy app
 ```
 
@@ -162,18 +162,4 @@ const RageClickProducer = composer<ClickEvent, RageClickEvent>([ClickProducer], 
     }
   };
 });
-
-const pipeline = createPipeline();
-
-let batch = [];
-pipeline.use([ClickProducer, RageClickProducer], (event) => {
-  batch.push(event);
-  if (batch.length === 10) {
-    fetch('/payload', { method: 'POST', data: batch });
-    batch = [];
-  }
-});
-
-// start the pipeline
-pipeline.start();
 ```

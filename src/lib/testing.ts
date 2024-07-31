@@ -13,10 +13,10 @@ export function contextHelper<T extends Record<string, unknown>>(setup: () => T)
     /**
      * @description mount modules and use the setup function
      */
-    $mount: async (...modules: ModuleFn[]) => {
+    $mount: (...modules: ModuleFn[]) => {
       if (isUsed) throw new Error('count be mounted twice');
       isUsed = true;
-      instance = await mount(() => {
+      instance = mount(() => {
         providers = setup();
         return modules;
       });

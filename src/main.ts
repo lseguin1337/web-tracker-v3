@@ -35,7 +35,8 @@ function WebTracker(config: TagConfig) {
 }
 
 function bootstrap() {
-  mount(() => WebTracker(CS_CONF));
+  const trackerApp = mount(() => WebTracker(CS_CONF));
+  console.log({ trackerApp });
 }
 
 bootstrap();
